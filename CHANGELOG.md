@@ -1,3 +1,10 @@
+# [1.16.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.15.1...v1.16.0) (2026-02-24)
+
+
+### Features
+
+* add llms.txt for agent-friendly site discovery ([43403c7](https://github.com/tarkovtracker-org/TarkovTracker/commit/43403c75b796b9b81d0cdc32848a0cf3879cc96c))
+
 ## [1.15.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.15.0...v1.15.1) (2026-02-24)
 
 
