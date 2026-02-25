@@ -1,3 +1,10 @@
+## [1.16.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.16.0...v1.16.1) (2026-02-25)
+
+
+### Bug Fixes
+
+* allow partial tarkov graphql data to avoid metadata 502s ([7537b33](https://github.com/tarkovtracker-org/TarkovTracker/commit/7537b339a632dc37da1f4fedf7a37c9b84dd44d7))
+
 # [1.16.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.15.1...v1.16.0) (2026-02-24)
 
 
