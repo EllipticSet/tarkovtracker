@@ -1,3 +1,10 @@
+## [1.16.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.16.2...v1.16.3) (2026-03-01)
+
+
+### Bug Fixes
+
+* bust stale tasks-objectives caches ([2247d07](https://github.com/tarkovtracker-org/TarkovTracker/commit/2247d07c7a58058b9bf5eadd943b9f97a5e7a94a))
+
 ## [1.16.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.16.1...v1.16.2) (2026-03-01)
 
 
