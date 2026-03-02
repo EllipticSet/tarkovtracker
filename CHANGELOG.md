@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.16.3...v1.17.0) (2026-03-02)
+
+
+### Features
+
+* **storyline:** clarify branching routes and blocked objectives ([15e4f55](https://github.com/tarkovtracker-org/TarkovTracker/commit/15e4f55ffba73906e094ce154623e0a70b155221))
+
 ## [1.16.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.16.2...v1.16.3) (2026-03-01)
 
 
