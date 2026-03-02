@@ -1,3 +1,10 @@
+# [1.18.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.17.0...v1.18.0) (2026-03-02)
+
+
+### Features
+
+* **ui:** redesign storyline route choices for clearer paths ([5da2c0b](https://github.com/tarkovtracker-org/TarkovTracker/commit/5da2c0b4c70cf4059bc083e9095b48bb3dc5b462))
+
 # [1.17.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.16.3...v1.17.0) (2026-03-02)
 
 
