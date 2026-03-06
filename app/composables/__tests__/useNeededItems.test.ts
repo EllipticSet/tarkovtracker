@@ -142,6 +142,11 @@ const createProgressStore = () => ({
     'task-2': { self: true },
     'task-kappa': { self: false },
   },
+  invalidTasks: {
+    'task-1': { self: false },
+    'task-2': { self: false },
+    'task-kappa': { self: false },
+  },
   moduleCompletions: {
     'station-1-1': { self: false },
     'station-2-2': { self: false },
@@ -272,6 +277,22 @@ describe('useNeededItems', () => {
     it('combines task objectives and hideout modules', async () => {
       const { neededItems } = await setup();
       expect(neededItems.allItems.value.length).toBe(6);
+    });
+    it('excludes task objectives for invalid tasks', async () => {
+      const { neededItems } = await setup({
+        progressStore: {
+          invalidTasks: {
+            'task-1': { self: true },
+            'task-2': { self: false },
+            'task-kappa': { self: false },
+          },
+        },
+      });
+      const taskIds = neededItems.allItems.value
+        .filter((item) => item.needType === 'taskObjective')
+        .map((item) => (item as NeededItemTaskObjective).taskId);
+      expect(taskIds).not.toContain('task-1');
+      expect(taskIds).toContain('task-kappa');
     });
     it('includes all items regardless of completion status', async () => {
       const { neededItems } = await setup();

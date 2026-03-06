@@ -191,6 +191,12 @@ export function useNeededItems(options: UseNeededItemsOptions = {}): UseNeededIt
     }
     return need.team?.id ?? null;
   };
+  const getNeedProgressTeamId = (
+    need: NeededItemTaskObjective | NeededItemHideoutModule
+  ): string => {
+    const teamId = getNeedTeamId(need);
+    return teamId ? progressStore.getTeamIndex(teamId) : 'self';
+  };
   const fullItemsLoadTimerId = ref<number | null>(null);
   const queueFullItemsLoad = (loadOptions: FullItemsLoadOptions = {}) => {
     if (itemsFullLoaded.value) return;
@@ -282,7 +288,12 @@ export function useNeededItems(options: UseNeededItemsOptions = {}): UseNeededIt
           continue;
         }
         const task = metadataStore.getTaskById(need.taskId);
-        if (task && task.factionName !== 'Any' && task.factionName !== userFaction.value) {
+        const progressTeamId = getNeedProgressTeamId(need);
+        const taskFaction = progressStore.playerFaction[progressTeamId] ?? userFaction.value;
+        if (task && task.factionName !== 'Any' && task.factionName !== taskFaction) {
+          continue;
+        }
+        if (progressStore.invalidTasks?.[need.taskId]?.[progressTeamId] === true) {
           continue;
         }
         if (task && !visibleTaskIds.value.has(task.id)) {
