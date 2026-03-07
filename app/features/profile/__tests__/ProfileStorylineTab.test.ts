@@ -3,13 +3,8 @@ import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ref } from 'vue';
-type RouteAlternative = {
-  complete: boolean;
-  id: string;
-  label: string;
-};
-const emptyRouteAlternatives = (): RouteAlternative[] => [];
-const TEST_CHAPTERS = [
+import type { StorylineNormalizedChapterView } from '@/composables/useStorylineChapters';
+const TEST_CHAPTERS: StorylineNormalizedChapterView[] = [
   {
     id: 'chapter-1',
     name: 'Chapter 1',
@@ -41,14 +36,15 @@ const TEST_CHAPTERS = [
         complete: false,
         hasEstimatedUnlocks: false,
         unlocks: [],
-        routeAlternatives: emptyRouteAlternatives(),
-        routeBlockingAlternatives: emptyRouteAlternatives(),
+        routeAlternatives: [],
+        routeBlockingAlternatives: [],
         routeState: 'open',
       },
     ],
     chapterUnlocks: [],
     mainObjectiveCompleted: 0,
     mainObjectiveTotal: 1,
+    endings: [],
     mainRouteChoices: [],
     mainObjectives: [
       {
@@ -59,8 +55,8 @@ const TEST_CHAPTERS = [
         complete: false,
         hasEstimatedUnlocks: false,
         unlocks: [],
-        routeAlternatives: emptyRouteAlternatives(),
-        routeBlockingAlternatives: emptyRouteAlternatives(),
+        routeAlternatives: [],
+        routeBlockingAlternatives: [],
         routeState: 'open',
       },
     ],
@@ -73,8 +69,8 @@ const TEST_CHAPTERS = [
         complete: false,
         hasEstimatedUnlocks: false,
         unlocks: [],
-        routeAlternatives: emptyRouteAlternatives(),
-        routeBlockingAlternatives: emptyRouteAlternatives(),
+        routeAlternatives: [],
+        routeBlockingAlternatives: [],
         routeState: 'open',
       },
     ],
@@ -83,6 +79,79 @@ const TEST_CHAPTERS = [
     optionalObjectives: [],
   },
 ];
+const createOptionalOnlyChapter = (): StorylineNormalizedChapterView => ({
+  id: 'chapter-2',
+  name: 'Chapter 2',
+  normalizedName: 'choice',
+  order: 2,
+  autoStart: false,
+  complete: false,
+  wikiLink: 'https://example.com/chapter-2',
+  description: null,
+  notes: null,
+  rewards: null,
+  requirements: [],
+  mapUnlocks: [],
+  traderUnlocks: [],
+  objectiveMap: {
+    'objective-optional-1': {
+      id: 'objective-optional-1',
+      order: 1,
+      type: 'optional',
+      description: 'Complete optional objective',
+    },
+  },
+  objectives: [
+    {
+      id: 'objective-optional-1',
+      order: 1,
+      type: 'optional',
+      description: 'Complete optional objective',
+      complete: false,
+      hasEstimatedUnlocks: false,
+      unlocks: [],
+      routeAlternatives: [],
+      routeBlockingAlternatives: [],
+      routeState: 'open',
+    },
+  ],
+  chapterUnlocks: [],
+  mainObjectiveCompleted: 0,
+  mainObjectiveTotal: 0,
+  endings: [],
+  mainRouteChoices: [],
+  mainObjectives: [],
+  mainLinearObjectives: [],
+  optionalRouteChoices: [],
+  optionalLinearObjectives: [
+    {
+      id: 'objective-optional-1',
+      order: 1,
+      type: 'optional',
+      description: 'Complete optional objective',
+      complete: false,
+      hasEstimatedUnlocks: false,
+      unlocks: [],
+      routeAlternatives: [],
+      routeBlockingAlternatives: [],
+      routeState: 'open',
+    },
+  ],
+  optionalObjectives: [
+    {
+      id: 'objective-optional-1',
+      order: 1,
+      type: 'optional',
+      description: 'Complete optional objective',
+      complete: false,
+      hasEstimatedUnlocks: false,
+      unlocks: [],
+      routeAlternatives: [],
+      routeBlockingAlternatives: [],
+      routeState: 'open',
+    },
+  ],
+});
 const cloneTestChapters = () => structuredClone(TEST_CHAPTERS);
 const normalizedChapters = ref(cloneTestChapters());
 const requireDefined = <T>(value: T | null | undefined, message: string): T => {
@@ -173,6 +242,16 @@ describe('ProfileStorylineTab', () => {
     expect(checkbox.attributes('disabled')).toBeDefined();
     await checkbox.trigger('change');
     expect(wrapper.emitted('toggleObjective')).toBeUndefined();
+    wrapper.unmount();
+  });
+  it('renders optional-only objectives and emits toggles for them', async () => {
+    normalizedChapters.value = [createOptionalOnlyChapter()];
+    const wrapper = await createWrapper(false);
+    expect(wrapper.text()).toContain('Complete optional objective');
+    const checkbox = wrapper.get('input[type="checkbox"]');
+    expect(checkbox.attributes('disabled')).toBeUndefined();
+    await checkbox.trigger('change');
+    expect(wrapper.emitted('toggleObjective')).toEqual([['chapter-2', 'objective-optional-1']]);
     wrapper.unmount();
   });
 });

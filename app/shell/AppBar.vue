@@ -61,8 +61,10 @@
           <UIcon name="i-mdi-translate" class="text-surface-300 h-4 w-4" />
           <span class="sr-only">{{ t('settings.locale') }}</span>
           <select
+            id="app-locale-select"
             v-model="selectedLocale"
             :aria-label="t('settings.locale')"
+            name="locale"
             class="text-surface-200 bg-transparent py-1 text-xs font-medium focus:outline-none"
           >
             <option

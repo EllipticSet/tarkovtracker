@@ -1127,10 +1127,10 @@
         return {
           confidence: 'high',
           daysRemaining: 0,
-          detail: t(
-            'page.profile.kappa_done_detail',
-            `Finished ${formatNumber(total)} Kappa tasks in about ${formatNumber(days)} days.`
-          ),
+          detail: t('page.profile.kappa_done_detail', {
+            days: formatNumber(days),
+            total: formatNumber(total),
+          }),
           etaTimestamp: maxTimestamp,
           headline: t('page.profile.kappa_done', 'Kappa complete in this mode'),
           state: 'completed',
@@ -1205,27 +1205,25 @@
     const daysRemaining = Math.max(paceBasedDays, criticalPathFloor);
     const etaTimestamp = Date.now() + daysRemaining * DAY_MS;
     const confidence = computeConfidence(sampleCount, sampleDays);
-    let detail = t(
-      'page.profile.kappa_projected_detail',
-      `Based on ${formatNumber(sampleCount)} timestamped completions across ${formatNumber(sampleDays)} days.`
-    );
+    let detail = t('page.profile.kappa_projected_detail', {
+      sample_count: formatNumber(sampleCount),
+      sample_days: formatNumber(sampleDays),
+    });
     if (floorActive) {
       detail +=
         ' ' +
-        t(
-          'page.profile.kappa_floor_note',
-          `Estimate raised to account for ${formatNumber(criticalPathFloor)} sequential prerequisites and level gates.`
-        );
+        t('page.profile.kappa_floor_note', {
+          critical_path_floor: formatNumber(criticalPathFloor),
+        });
     }
     return {
       confidence,
       daysRemaining,
       detail,
       etaTimestamp,
-      headline: t(
-        'page.profile.kappa_projected_headline',
-        `Estimated Kappa in about ${formatNumber(daysRemaining)} days.`
-      ),
+      headline: t('page.profile.kappa_projected_headline', {
+        days_remaining: formatNumber(daysRemaining),
+      }),
       state: 'projected',
     };
   });
@@ -1252,7 +1250,7 @@
       return t('page.profile.story_no_tasks', 'Waiting for task metadata to build your story.');
     }
     if (completedTasks.value <= 0) {
-      return t('page.profile.story_start', `${modeLabel.value} profile is just getting started.`);
+      return t('page.profile.story_start', { mode: modeLabel.value });
     }
     if (taskCompletionPct.value >= 100) {
       return t('page.profile.story_complete', 'Main task storyline completed.');
@@ -1274,27 +1272,27 @@
   });
   const storyParagraph = computed(() => {
     if (!firstProgressTimestamp.value) {
-      return t(
-        'page.profile.story_paragraph_empty',
-        `${displayName.value} has not recorded timestamped progress in ${modeLabel.value} yet.`
-      );
+      return t('page.profile.story_paragraph_empty', {
+        mode: modeLabel.value,
+        name: displayName.value,
+      });
     }
-    return t(
-      'page.profile.story_paragraph',
-      `${displayName.value} has been active in ${modeLabel.value} for about ${formatNumber(
-        activeDays.value
-      )} days, with ${formatNumber(journeyDays.value)} days between first and latest tracked progress.`
-    );
+    return t('page.profile.story_paragraph', {
+      active_days: formatNumber(activeDays.value),
+      journey_days: formatNumber(journeyDays.value),
+      mode: modeLabel.value,
+      name: displayName.value,
+    });
   });
   const nextMilestoneCopy = computed(() => {
     if (!nextTaskMilestone.value) {
       return t('page.profile.next_milestone_done', 'All task completion milestones reached.');
     }
     const remainingPct = Math.max(0, nextTaskMilestone.value - taskCompletionPct.value);
-    return t(
-      'page.profile.next_milestone_value',
-      `${remainingPct.toFixed(1)}% left to reach ${nextTaskMilestone.value}% task completion.`
-    );
+    return t('page.profile.next_milestone_value', {
+      milestone: nextTaskMilestone.value.toFixed(0),
+      remaining: remainingPct.toFixed(1),
+    });
   });
   const dateFormatter = computed(
     () =>
@@ -1383,10 +1381,10 @@
       id: 'level',
       icon: 'i-mdi-account-star-outline',
       label: t('navigation_drawer.level', 'Level'),
-      meta: t(
-        'page.profile.level_meta',
-        `${modeLabel.value} profile level and active faction (${modeFaction.value})`
-      ),
+      meta: t('page.profile.level_meta', {
+        faction: modeFaction.value,
+        mode: modeLabel.value,
+      }),
       percentage: Math.min(100, calculatePercentageNum(profileLevel.value, MAX_LEVEL)),
       tone: 'primary',
       value: formatNumber(profileLevel.value),
@@ -1395,10 +1393,10 @@
       id: 'tasks',
       icon: 'i-mdi-clipboard-check-outline',
       label: t('page.dashboard.progress.tasks', 'Tasks'),
-      meta: t(
-        'page.profile.tasks_meta',
-        `${formatNumber(remainingTasks.value)} remaining, ${formatNumber(failedTasks.value)} failed branches`
-      ),
+      meta: t('page.profile.tasks_meta', {
+        failed: formatNumber(failedTasks.value),
+        remaining: formatNumber(remainingTasks.value),
+      }),
       percentage: taskCompletionPct.value,
       tone: 'success',
       value: `${formatNumber(completedTasks.value)}/${formatNumber(totalTasks.value)}`,
@@ -1407,10 +1405,9 @@
       id: 'objectives',
       icon: 'i-mdi-target',
       label: t('page.dashboard.progress.objectives', 'Objectives'),
-      meta: t(
-        'page.profile.objectives_meta',
-        `${objectiveCompletionPct.value.toFixed(1)}% completion across tracked objectives`
-      ),
+      meta: t('page.profile.objectives_meta', {
+        completion_pct: objectiveCompletionPct.value.toFixed(1),
+      }),
       percentage: objectiveCompletionPct.value,
       tone: 'info',
       value: `${formatNumber(completedObjectives.value)}/${formatNumber(totalObjectives.value)}`,
@@ -1419,10 +1416,9 @@
       id: 'hideout',
       icon: 'i-mdi-home-city-outline',
       label: t('navigation_drawer.hideout', 'Hideout'),
-      meta: t(
-        'page.profile.hideout_meta',
-        `${formatNumber(completedHideoutParts.value)} completed hideout item checkpoints`
-      ),
+      meta: t('page.profile.hideout_meta', {
+        completed_parts: formatNumber(completedHideoutParts.value),
+      }),
       percentage: hideoutCompletionPct.value,
       tone: 'warning',
       value: `${formatNumber(completedHideoutModules.value)}/${formatNumber(totalHideoutModules.value)}`,

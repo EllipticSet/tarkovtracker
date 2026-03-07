@@ -25,6 +25,7 @@ const STORY_CHAPTERS: StoryChapter[] = [
         order: 1,
         type: 'main',
         description: 'Route A Objective',
+        notes: 'Savior ending - cooperate fully with Kerman',
         mutuallyExclusiveWith: ['obj-b'],
       },
       'obj-b': {
@@ -32,6 +33,7 @@ const STORY_CHAPTERS: StoryChapter[] = [
         order: 2,
         type: 'main',
         description: 'Route B Objective',
+        notes: 'Fallen ending - keep the evidence',
         mutuallyExclusiveWith: ['obj-a'],
       },
       'obj-c': {
@@ -50,11 +52,11 @@ const STORY_CHAPTERS: StoryChapter[] = [
     },
   },
 ];
-const loadComposable = async () => {
+const loadComposable = async (storyChapters: StoryChapter[] = STORY_CHAPTERS) => {
   vi.resetModules();
   vi.doMock('@/stores/useMetadata', () => ({
     useMetadataStore: () => ({
-      storyChapters: STORY_CHAPTERS,
+      storyChapters,
     }),
   }));
   vi.doMock('@/stores/useTarkov', () => ({
@@ -115,6 +117,26 @@ describe('useStorylineChapters', () => {
       'obj-a',
       'obj-b',
     ]);
+    expect(chapter.endings).toEqual([
+      {
+        id: 'obj-a-ending',
+        label: 'Savior Ending',
+        objectiveId: 'obj-a',
+        objectiveLabel: 'Route A Objective',
+        routeBlockingAlternatives: [{ id: 'obj-b', label: 'Route B Objective', complete: true }],
+        routeChoiceIndex: 1,
+        routeState: 'blocked',
+      },
+      {
+        id: 'obj-b-ending',
+        label: 'Fallen Ending',
+        objectiveId: 'obj-b',
+        objectiveLabel: 'Route B Objective',
+        routeBlockingAlternatives: [],
+        routeChoiceIndex: 1,
+        routeState: 'chosen',
+      },
+    ]);
     const objectiveAUnlocks = objectiveA.unlocks.map((unlock) => unlock.label);
     const objectiveBUnlocks = objectiveB.unlocks.map((unlock) => unlock.label);
     const objectiveCUnlocks = objectiveC.unlocks.map((unlock) => unlock.label);
@@ -146,5 +168,38 @@ describe('useStorylineChapters', () => {
     expect(objectiveD.routeAlternatives).toEqual([]);
     expect(objectiveD.routeBlockingAlternatives).toEqual([]);
     expect(objectiveD.routeState).toBe('open');
+    expect(chapter.endings.map((ending) => ending.objectiveId)).toEqual(['obj-a', 'obj-b']);
+  });
+  it('does not classify lead-to route notes as endings', async () => {
+    const chapters = JSON.parse(JSON.stringify(STORY_CHAPTERS)) as StoryChapter[];
+    const chapter = chapters[0];
+    if (!chapter) {
+      throw new Error('Missing storyline chapter fixture');
+    }
+    chapter.objectives = chapter.objectives ?? {};
+    chapter.objectives['obj-e'] = {
+      description: 'Kerman Route',
+      id: 'obj-e',
+      mutuallyExclusiveWith: ['obj-f'],
+      notes: 'Kerman Route — leads to Savior or Fallen ending',
+      order: 5,
+      type: 'optional',
+    };
+    chapter.objectives['obj-f'] = {
+      description: 'Kerman Route Alternative',
+      id: 'obj-f',
+      order: 6,
+      type: 'optional',
+    };
+    const { normalizedChapters } = await loadComposable(chapters);
+    const normalizedChapter = requireDefined(
+      normalizedChapters.value[0],
+      'Expected first normalized chapter'
+    );
+    expect(normalizedChapter.optionalRouteChoices).toHaveLength(1);
+    expect(normalizedChapter.endings.map((ending) => ending.objectiveId)).toEqual([
+      'obj-a',
+      'obj-b',
+    ]);
   });
 });

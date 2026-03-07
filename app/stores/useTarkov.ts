@@ -1645,6 +1645,10 @@ export async function initializeTarkovSync() {
   if (import.meta.client && $supabase.user.loggedIn) {
     const toastI18n = useToastI18n();
     const currentUserId = $supabase.user.id;
+    if (!currentUserId) {
+      logger.warn('[TarkovStore] Skipping sync initialization without an authenticated user id');
+      return;
+    }
     if (syncController) {
       if (syncUserId === currentUserId) {
         logger.debug('[TarkovStore] Supabase sync already initialized, skipping');
@@ -1827,7 +1831,7 @@ export async function initializeTarkovSync() {
             recordLocalSyncTime();
             const { error: upsertError } = await $supabase.client
               .from('user_progress')
-              .upsert(buildUpsertPayload($supabase.user.id, resolvedState));
+              .upsert(buildUpsertPayload(currentUserId, resolvedState));
             if (upsertError) {
               logger.error('[TarkovStore] Error syncing merged progress to Supabase:', upsertError);
               return { ok: false, hadRemoteData };

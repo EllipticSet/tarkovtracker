@@ -52,10 +52,20 @@ export interface StorylineObjectiveProgress extends StoryObjective {
   routeBlockingAlternatives: StorylineObjectiveRouteView[];
   routeState: 'open' | 'chosen' | 'blocked';
 }
+export interface StorylineEndingView {
+  id: string;
+  label: string;
+  objectiveId: string;
+  objectiveLabel: string;
+  routeBlockingAlternatives: StorylineObjectiveRouteView[];
+  routeChoiceIndex: number | null;
+  routeState: StorylineObjectiveProgress['routeState'];
+}
 export interface StorylineNormalizedChapterView extends Omit<
   StorylineChapterView,
   'objectives' | 'requirements'
 > {
+  endings: StorylineEndingView[];
   mainObjectiveCompleted: number;
   mainObjectiveTotal: number;
   mainObjectives: StorylineObjectiveProgress[];
@@ -289,6 +299,73 @@ const buildRouteChoiceGroups = (
     routeChoiceGroups,
   };
 };
+const extractEndingName = (value?: string | null): string | null => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const normalized = value.replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim();
+  if (!normalized) {
+    return null;
+  }
+  const explicitMatch = normalized.match(/^([^:;-]+?)\s+ending\b(?:\s*[:;-].*)?$/i);
+  const endingName = explicitMatch?.[1]?.trim();
+  if (!endingName) {
+    return null;
+  }
+  if (/\bleads?\s+to\b/i.test(endingName)) {
+    return null;
+  }
+  return endingName;
+};
+const formatEndingLabel = (name: string): string => {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return 'Ending';
+  }
+  if (/\bending\b/i.test(trimmed)) {
+    return trimmed;
+  }
+  return `${trimmed} Ending`;
+};
+const buildStoryEndings = (
+  objectives: StorylineObjectiveProgress[],
+  routeChoices: StorylineRouteChoiceGroup[]
+): StorylineEndingView[] => {
+  if (!objectives.length || !routeChoices.length) {
+    return [];
+  }
+  const routeChoiceIndexByObjectiveId = new Map<string, number>();
+  routeChoices.forEach((routeChoice, routeChoiceIndex) => {
+    routeChoice.objectives.forEach((objective) => {
+      routeChoiceIndexByObjectiveId.set(objective.id, routeChoiceIndex + 1);
+    });
+  });
+  const endings = objectives.flatMap((objective) => {
+    const endingName =
+      extractEndingName(objective.notes) ?? extractEndingName(objective.description);
+    if (!endingName) {
+      return [];
+    }
+    if (!routeChoiceIndexByObjectiveId.has(objective.id)) {
+      return [];
+    }
+    if (objective.routeAlternatives.length === 0) {
+      return [];
+    }
+    return [
+      {
+        id: `${objective.id}-ending`,
+        label: formatEndingLabel(endingName),
+        objectiveId: objective.id,
+        objectiveLabel: objective.description,
+        routeBlockingAlternatives: objective.routeBlockingAlternatives,
+        routeChoiceIndex: routeChoiceIndexByObjectiveId.get(objective.id) ?? null,
+        routeState: objective.routeState,
+      },
+    ];
+  });
+  return endings;
+};
 export function useStorylineChapters(options: UseStorylineChaptersOptions = {}): {
   chapters: ComputedRef<StorylineChapterView[]>;
   normalizedChapters: ComputedRef<StorylineNormalizedChapterView[]>;
@@ -387,8 +464,10 @@ export function useStorylineChapters(options: UseStorylineChaptersOptions = {}):
         linearObjectives: optionalLinearObjectives,
         routeChoiceGroups: optionalRouteChoices,
       } = buildRouteChoiceGroups(optionalObjectives);
+      const endings = buildStoryEndings(objectives, [...mainRouteChoices, ...optionalRouteChoices]);
       return {
         ...chapter,
+        endings,
         mainObjectiveCompleted: mainObjectives.filter((objective) => objective.complete).length,
         mainObjectiveTotal: mainObjectives.length,
         mainLinearObjectives,

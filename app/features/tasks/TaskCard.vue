@@ -1,6 +1,7 @@
 <template>
   <UCard
     :id="`task-${task.id}`"
+    :data-task-id="task.id"
     class="card relative divide-none overflow-hidden shadow-md ring-0"
     :class="[taskClasses, accentClasses, 'rounded-md']"
     :ui="{ body: 'p-0 sm:p-0 flex flex-col h-full', footer: 'p-0 sm:p-0 border-t-0' }"

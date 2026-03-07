@@ -12,11 +12,12 @@ const mockPreferencesStore = reactive({
   localeOverride: 'de' as string | null,
 });
 const mockShowLoadFailed = vi.fn();
+const mockSupabaseUser = reactive({
+  loggedIn: false,
+  id: null as string | null,
+});
 const mockSupabase = {
-  user: {
-    loggedIn: false,
-    id: null as string | null,
-  },
+  user: mockSupabaseUser,
 };
 const mockInitializeTarkovSync = vi.fn(async () => {});
 const mockResetTarkovSync = vi.fn();
@@ -79,8 +80,8 @@ describe('useAppInitialization locale setup', () => {
     mockShowLoadFailed.mockClear();
     const { logger } = await import('@/utils/logger');
     (logger.error as Mock).mockClear();
-    mockSupabase.user.loggedIn = false;
-    mockSupabase.user.id = null;
+    mockSupabaseUser.loggedIn = false;
+    mockSupabaseUser.id = null;
   });
   it('applies locale override through setLocale on mount', async () => {
     const wrapper = await mountWithComposable();
@@ -128,6 +129,18 @@ describe('useAppInitialization locale setup', () => {
     mockPreferencesStore.localeOverride = 'fr';
     await flushPromises();
     expect(setLocale).toHaveBeenCalledWith('fr');
+    wrapper.unmount();
+  });
+  it('waits for a hydrated user id before starting sync and migration', async () => {
+    mockSupabaseUser.loggedIn = true;
+    const wrapper = await mountWithComposable();
+    await flushPromises();
+    expect(mockInitializeTarkovSync).not.toHaveBeenCalled();
+    expect(mockMigrateDataIfNeeded).not.toHaveBeenCalled();
+    mockSupabaseUser.id = 'user-1';
+    await flushPromises();
+    expect(mockInitializeTarkovSync).toHaveBeenCalledTimes(1);
+    expect(mockMigrateDataIfNeeded).toHaveBeenCalledTimes(1);
     wrapper.unmount();
   });
 });

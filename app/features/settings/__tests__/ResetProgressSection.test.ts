@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick, reactive } from 'vue';
 import ResetProgressSection from '@/features/settings/ResetProgressSection.vue';
+import type { PrestigeRunRecord } from '@/stores/useTarkov';
 const {
   fetchPrestigeRunsMock,
   prestigePvPMock,
@@ -11,7 +12,7 @@ const {
   resetPvPDataMock,
   toastAddMock,
 } = vi.hoisted(() => ({
-  fetchPrestigeRunsMock: vi.fn(async () => []),
+  fetchPrestigeRunsMock: vi.fn(async (): Promise<PrestigeRunRecord[]> => []),
   prestigePvPMock: vi.fn(async () => undefined),
   resetAllDataMock: vi.fn(async () => undefined),
   resetPvEDataMock: vi.fn(async () => undefined),
@@ -111,7 +112,7 @@ const UModal = {
 const findButtonByText = (wrapper: ReturnType<typeof mount>, text: string) => {
   return wrapper.findAll('button').find((button) => button.text().includes(text));
 };
-const createPrestigeRun = (id: string) => ({
+const createPrestigeRun = (id: string): PrestigeRunRecord => ({
   createdAt: '2026-03-01T00:00:00.000Z',
   id,
   mode: 'pvp' as const,

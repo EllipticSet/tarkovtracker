@@ -3,6 +3,7 @@ import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { reactive } from 'vue';
+import type { UserProgressData } from '@/stores/progressState';
 const replaceMock = vi.fn(async (_location: { query: Record<string, unknown> }) => undefined);
 const routeState = reactive({
   query: {
@@ -31,11 +32,29 @@ vi.mock('vue-i18n', async (importOriginal) => ({
     te: () => false,
   }),
 }));
+const createProgressData = (overrides: Partial<UserProgressData> = {}): UserProgressData => ({
+  level: 1,
+  pmcFaction: 'USEC',
+  displayName: null,
+  xpOffset: 0,
+  taskObjectives: {},
+  taskCompletions: {},
+  hideoutParts: {},
+  hideoutModules: {},
+  traders: {},
+  skills: {},
+  prestigeLevel: 0,
+  progressEpoch: 0,
+  skillOffsets: {},
+  storyChapters: {},
+  apiUpdateHistory: [],
+  ...overrides,
+});
 const mountPanel = async () => {
   const { default: ApiUpdateLogPanel } = await import('@/features/tasks/ApiUpdateLogPanel.vue');
   return mount(ApiUpdateLogPanel, {
     props: {
-      progressData: {
+      progressData: createProgressData({
         apiUpdateHistory: [
           {
             at: Date.now(),
@@ -44,7 +63,7 @@ const mountPanel = async () => {
             tasks: [{ id: 'task-1', state: 'completed' }],
           },
         ],
-      },
+      }),
     },
     global: {
       stubs: {

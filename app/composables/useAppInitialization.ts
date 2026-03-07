@@ -26,10 +26,13 @@ export function useAppInitialization() {
       logger.error('[useAppInitialization] Failed to apply locale override:', error);
     }
   };
+  const hasAuthenticatedUser = () => {
+    return import.meta.client && $supabase.user.loggedIn && Boolean($supabase.user.id);
+  };
   let syncStarted = false;
   let migrationAttempted = false;
   const startSyncIfNeeded = async () => {
-    if (!import.meta.client || !$supabase.user.loggedIn || syncStarted) return;
+    if (!hasAuthenticatedUser() || syncStarted) return;
     syncStarted = true;
     try {
       await initializeTarkovSync();
@@ -40,7 +43,7 @@ export function useAppInitialization() {
     }
   };
   const runMigrationIfNeeded = async () => {
-    if (!import.meta.client || !$supabase.user.loggedIn || migrationAttempted) return;
+    if (!hasAuthenticatedUser() || migrationAttempted) return;
     try {
       const store = useTarkovStore();
       await store.migrateDataIfNeeded?.();
@@ -56,8 +59,10 @@ export function useAppInitialization() {
     () => [$supabase.user.loggedIn, $supabase.user.id] as const,
     async ([loggedIn, userId], previous) => {
       const [prevLoggedIn, prevUserId] = previous ?? [false, null];
-      if (!loggedIn) {
-        if (prevLoggedIn) {
+      if (!loggedIn || !userId) {
+        if (prevLoggedIn && prevUserId) {
+          resetTarkovSync(!loggedIn ? 'logout' : 'user unavailable');
+        } else if (!loggedIn && prevLoggedIn) {
           resetTarkovSync('logout');
         }
         syncStarted = false;

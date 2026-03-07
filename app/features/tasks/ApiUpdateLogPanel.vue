@@ -122,10 +122,13 @@
   const translateApiUpdateLog = (
     key: string,
     fallback: string,
-    params?: Record<string, string | number>
+    params?: Record<string, unknown>
   ): string => {
     const translationKey = `page.tasks.api_update_log.${key}`;
-    return hasTranslation(translationKey) ? t(translationKey, params) : fallback;
+    if (!hasTranslation(translationKey)) {
+      return fallback;
+    }
+    return params ? t(translationKey, params) : t(translationKey);
   };
   const isApiTaskState = (state: unknown): state is ApiTaskUpdate['state'] => {
     return state === 'completed' || state === 'failed' || state === 'uncompleted';

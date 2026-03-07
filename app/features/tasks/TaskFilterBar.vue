@@ -5,7 +5,9 @@
     >
       <div class="w-full sm:w-56 sm:max-w-64 lg:max-w-72">
         <UInput
+          id="task-search"
           :model-value="searchQuery"
+          name="task-search"
           :placeholder="t('page.tasks.search.placeholder')"
           :aria-label="t('page.tasks.search.aria_label')"
           icon="i-mdi-magnify"

@@ -1443,6 +1443,9 @@ export const useMetadataStore = defineStore('metadata', {
               .map((chapter) => normalizeStoryChapter(chapter))
               .sort((a, b) => a.order - b.order);
             this.storyChapters = markRaw(sorted);
+            void this.fetchEditionsData(true).catch((err) =>
+              logger.warn('[MetadataStore] Background editions revalidation failed:', err)
+            );
             return;
           }
         } catch (cacheErr) {
