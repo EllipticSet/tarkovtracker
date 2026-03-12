@@ -1,3 +1,15 @@
+# [1.22.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.21.0...v1.22.0) (2026-03-12)
+
+
+### Bug Fixes
+
+* **test:** correct locale hydration expectation ([758a739](https://github.com/tarkovtracker-org/TarkovTracker/commit/758a73991aa75ad71fe17ac11dff96c44049e95e))
+
+
+### Features
+
+* **security:** add consent-based analytics and harden runtime protections ([ecff58d](https://github.com/tarkovtracker-org/TarkovTracker/commit/ecff58da8dc948352045c5af84543c490e446032))
+
 # [1.21.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.20.0...v1.21.0) (2026-03-07)
 
 
