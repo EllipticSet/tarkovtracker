@@ -47,9 +47,8 @@
       </button>
       <div
         class="text-sm font-semibold tabular-nums"
-        :class="
-          isLocked ? 'text-surface-500' : isComplete ? 'text-success-400/70' : 'text-surface-200'
-        "
+        :class="percentageTextClass"
+        :style="percentageTextStyle"
       >
         {{ percentage }}%
       </div>
@@ -261,7 +260,17 @@
   const mainBarColor = computed(() => {
     if (isLocked.value) return 'locked' as const;
     if (isComplete.value) return 'success' as const;
-    return 'neutral' as const;
+    return 'gradient' as const;
+  });
+  const percentageTextStyle = computed(() => {
+    if (isLocked.value || isComplete.value) return {};
+    const hue = (props.percentage / 100) * 120;
+    return { color: `hsl(${hue}, 70%, 55%)` };
+  });
+  const percentageTextClass = computed(() => {
+    if (isLocked.value) return 'text-surface-500';
+    if (isComplete.value) return 'text-success-400/70';
+    return '';
   });
   const loyaltyButtonClasses = (lvl: number) => {
     const isActive = currentLevel.value === lvl;

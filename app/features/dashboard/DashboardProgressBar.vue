@@ -1,9 +1,9 @@
 <template>
   <div class="bg-surface-700/50 relative overflow-hidden rounded-full" :class="sizeClass">
     <div
-      class="absolute inset-y-0 left-0 rounded-full transition-[width] duration-300 ease-out"
+      class="absolute inset-y-0 left-0 rounded-full transition-[width,background-color] duration-300 ease-out"
       :class="fillClass"
-      :style="{ width: `${percentage}%` }"
+      :style="fillStyle"
       role="progressbar"
       :aria-label="ariaLabel"
       :aria-valuenow="percentage"
@@ -35,7 +35,16 @@
     kappa: 'bg-kappa-500',
     lightkeeper: 'bg-lightkeeper-500',
     locked: 'bg-surface-600/40',
+    gradient: '',
   };
   const sizeClass = computed(() => (props.size === 'sm' ? 'h-1' : 'h-2.5'));
   const fillClass = computed(() => fillColors[props.color]);
+  const fillStyle = computed(() => {
+    const style: Record<string, string> = { width: `${props.percentage}%` };
+    if (props.color === 'gradient') {
+      const hue = (props.percentage / 100) * 120;
+      style.backgroundColor = `hsl(${hue}, 70%, 45%)`;
+    }
+    return style;
+  });
 </script>
