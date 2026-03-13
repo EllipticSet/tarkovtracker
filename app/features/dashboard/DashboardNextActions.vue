@@ -38,15 +38,17 @@
               </span>
               <span
                 v-if="filtersActive"
-                class="text-surface-300 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px]"
+                class="text-surface-300 inline-flex min-h-6 items-center rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] leading-none"
               >
-                {{ t('page.dashboard.focus.badge.based_on_filters') }}
+                <span class="leading-none">
+                  {{ t('page.dashboard.focus.badge.based_on_filters') }}
+                </span>
               </span>
               <span
                 v-if="hiddenAvailableCount > 0"
-                class="border-warning-400/20 bg-warning-500/10 text-warning-100 rounded-full border px-2.5 py-1 text-[11px]"
+                class="border-warning-400/20 bg-warning-500/10 text-warning-100 inline-flex min-h-6 items-center rounded-full border px-2.5 py-1 text-[11px] leading-none"
               >
-                {{ hiddenTasksBadge }}
+                <span class="leading-none">{{ hiddenTasksBadge }}</span>
               </span>
             </div>
             <div class="space-y-2">
@@ -63,9 +65,12 @@
           <span
             v-for="badge in primaryBadges"
             :key="badge"
-            :class="['rounded-full border px-3 py-1 text-xs font-medium', toneClasses.badge]"
+            :class="[
+              'inline-flex min-h-7 items-center rounded-full border px-3 py-1 text-xs leading-none font-medium',
+              toneClasses.badge,
+            ]"
           >
-            {{ badge }}
+            <span class="leading-none">{{ badge }}</span>
           </span>
         </div>
         <div class="grid gap-3 md:grid-cols-[minmax(0,1.12fr)_minmax(0,0.94fr)_minmax(0,0.94fr)]">
@@ -120,9 +125,9 @@
             </div>
           </div>
           <div
-            class="text-surface-200 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium"
+            class="text-surface-200 inline-flex min-h-7 items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs leading-none font-medium"
           >
-            {{ secondaryRecommendations.length }}
+            <span class="leading-none">{{ secondaryRecommendations.length }}</span>
           </div>
         </div>
         <div v-if="secondaryRecommendations.length" class="space-y-3">

@@ -39,7 +39,7 @@
       <button
         v-for="faction in factions"
         :key="faction"
-        class="flex-1 px-2 py-1.5 text-xs font-semibold uppercase transition-colors focus:z-10 focus:ring-2 focus:ring-white/40 focus:outline-none"
+        class="flex min-h-8 flex-1 items-center justify-center px-2 py-1.5 text-xs font-semibold uppercase transition-colors focus:z-10 focus:ring-2 focus:ring-white/40 focus:outline-none"
         :class="[
           faction === currentFaction
             ? 'bg-white/15 text-white'
@@ -52,7 +52,7 @@
         :aria-pressed="faction === currentFaction"
         @click="setFaction(faction)"
       >
-        {{ faction }}
+        <span class="leading-none">{{ faction }}</span>
       </button>
     </div>
   </div>

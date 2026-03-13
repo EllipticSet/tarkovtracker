@@ -30,7 +30,7 @@
       </div>
       <div class="text-3xl font-bold" :class="percentageColorClass">{{ percentageDisplay }}%</div>
     </div>
-    <div class="bg-surface-800/35 relative h-2 overflow-hidden rounded-full">
+    <div class="bg-surface-700/50 relative h-2.5 overflow-hidden rounded-full">
       <div
         class="absolute inset-y-0 left-0 rounded-full transition-[width] duration-300 ease-out"
         :class="barGradientClass"
@@ -82,42 +82,42 @@
       iconBg: 'bg-primary-600/15',
       icon: 'text-primary-400',
       percentage: 'text-primary-400',
-      bar: 'bg-primary-500/60',
+      bar: 'bg-primary-500',
     },
     neutral: {
       hover: 'hover:border-surface-600',
       iconBg: 'bg-surface-700',
       icon: 'text-surface-300',
       percentage: 'text-surface-50',
-      bar: 'bg-surface-400/60',
+      bar: 'bg-surface-400',
     },
     info: {
       hover: 'hover:border-surface-600',
       iconBg: 'bg-info-600/15',
       icon: 'text-info-400',
       percentage: 'text-info-400',
-      bar: 'bg-info-500/60',
+      bar: 'bg-info-500',
     },
     success: {
       hover: 'hover:border-surface-600',
       iconBg: 'bg-success-600/15',
       icon: 'text-success-400',
       percentage: 'text-success-400',
-      bar: 'bg-success-500/60',
+      bar: 'bg-success-500',
     },
     kappa: {
       hover: 'hover:border-surface-600',
       iconBg: 'bg-kappa-600/15',
       icon: 'text-kappa-400',
       percentage: 'text-kappa-400',
-      bar: 'bg-kappa-500/60',
+      bar: 'bg-kappa-500',
     },
     lightkeeper: {
       hover: 'hover:border-surface-600',
       iconBg: 'bg-lightkeeper-600/15',
       icon: 'text-lightkeeper-400',
       percentage: 'text-lightkeeper-400',
-      bar: 'bg-lightkeeper-500/60',
+      bar: 'bg-lightkeeper-500',
     },
   };
   const hoverBorderClass = computed(() => colorClasses[props.color].hover);
