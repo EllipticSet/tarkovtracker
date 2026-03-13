@@ -78,7 +78,7 @@
             </div>
           </div>
           <div class="bg-surface-950/48 rounded-xl border border-white/8 p-4">
-            <div class="text-surface-500 text-[11px] tracking-[0.2em] uppercase">
+            <div class="text-surface-400 text-[11px] tracking-[0.2em] uppercase">
               {{ t('page.dashboard.focus.stat.progress') }}
             </div>
             <div class="text-surface-100 mt-2 text-sm leading-6">
@@ -86,7 +86,7 @@
             </div>
           </div>
           <div class="bg-surface-950/48 rounded-xl border border-white/8 p-4">
-            <div class="text-surface-500 text-[11px] tracking-[0.2em] uppercase">
+            <div class="text-surface-400 text-[11px] tracking-[0.2em] uppercase">
               {{ t('page.dashboard.focus.stat.status') }}
             </div>
             <div class="text-surface-100 mt-2 text-sm leading-6">
@@ -112,10 +112,10 @@
       <div class="bg-surface-950/60 rounded-2xl border border-white/10 p-4">
         <div class="mb-3 flex items-center justify-between gap-3">
           <div>
-            <div class="text-surface-500 text-[11px] tracking-[0.2em] uppercase">
+            <div class="text-surface-400 text-[11px] tracking-[0.2em] uppercase">
               {{ t('page.dashboard.focus.stat.secondary') }}
             </div>
-            <div class="text-surface-300 mt-1 text-sm">
+            <div class="text-surface-200 mt-1 text-sm">
               {{ secondarySummary }}
             </div>
           </div>
@@ -148,19 +148,19 @@
               <div class="truncate text-sm font-semibold text-white">
                 {{ getSecondaryHeading(recommendation) }}
               </div>
-              <div class="text-surface-400 mt-1 text-xs leading-5">
+              <div class="text-surface-300 mt-1 text-xs leading-5">
                 {{ getSecondaryDescription(recommendation) }}
               </div>
             </div>
             <UIcon
               name="i-mdi-arrow-right"
-              class="text-surface-500 group-hover:text-surface-300 mt-1 h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5"
+              class="text-surface-400 group-hover:text-surface-300 mt-1 h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5"
             />
           </NuxtLink>
         </div>
         <div
           v-else
-          class="bg-surface-900/40 text-surface-400 rounded-xl border border-dashed border-white/10 px-4 py-5 text-sm"
+          class="bg-surface-900/40 text-surface-300 rounded-xl border border-dashed border-white/10 px-4 py-5 text-sm"
         >
           {{ t('page.dashboard.focus.stat.secondary_empty') }}
         </div>

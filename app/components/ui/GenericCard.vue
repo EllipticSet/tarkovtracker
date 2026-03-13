@@ -54,7 +54,7 @@
                 class="flex items-center gap-2 pr-4 text-right"
               >
                 <slot name="title-right">
-                  <span v-if="props.subtitle" class="text-surface-400 text-xs">
+                  <span v-if="props.subtitle" class="text-surface-300 text-xs">
                     {{ props.subtitle }}
                   </span>
                 </slot>

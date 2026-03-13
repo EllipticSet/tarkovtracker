@@ -1,8 +1,8 @@
 <template>
   <div
-    class="bg-surface-900 hover:border-surface-600 focus-visible:border-surface-500 focus-visible:ring-surface-700/50 flex h-full min-h-44 flex-col rounded-lg border border-white/12 px-4 py-3 shadow-md transition-all outline-none hover:shadow-lg focus-visible:ring-2"
+    class="bg-surface-900 hover:border-surface-600 focus-visible:border-surface-500 focus-visible:ring-surface-700/50 flex h-full min-h-44 flex-col rounded-lg border border-white/12 px-5 py-4 shadow-md transition-all outline-none hover:shadow-lg focus-visible:ring-2"
   >
-    <div class="mb-2 flex items-center gap-3">
+    <div class="mb-3 flex items-center gap-3">
       <button
         type="button"
         class="flex min-w-0 flex-1 items-center gap-3 text-left transition-opacity hover:opacity-80 focus:outline-none"
@@ -26,12 +26,12 @@
       </button>
       <div class="text-surface-200 text-sm font-semibold tabular-nums">{{ percentage }}%</div>
     </div>
-    <div class="text-surface-400 mb-1 flex items-center justify-between text-xs">
+    <div class="text-surface-300 mb-2 flex items-center justify-between text-xs font-medium">
       <span>{{ completedTasks }}/{{ totalTasks }} {{ $t('page.dashboard.traders.tasks') }}</span>
     </div>
     <div
       class="bg-surface-800/35 relative h-2 overflow-hidden rounded-full"
-      :class="{ 'mb-2': isLocked || hasLoyaltyLevels || isFence }"
+      :class="{ 'mb-4': isLocked || hasLoyaltyLevels || isFence }"
     >
       <div
         class="bg-surface-400/60 absolute inset-y-0 left-0 rounded-full transition-[width] duration-300 ease-out"
@@ -39,7 +39,7 @@
       ></div>
     </div>
     <div v-if="isLocked && unlockTask" class="text-xs">
-      <div class="text-surface-400 mb-0.5 flex items-center gap-1">
+      <div class="text-surface-300 mb-1 flex items-center gap-1">
         <UIcon name="i-mdi-lock" class="h-3.5 w-3.5" />
         <span>{{ $t('page.dashboard.traders.unlock_required') }}</span>
       </div>
@@ -51,7 +51,7 @@
       </NuxtLink>
     </div>
     <div v-else-if="hasLoyaltyLevels" class="space-y-2">
-      <div class="text-surface-400 flex items-center justify-between text-xs font-medium">
+      <div class="text-surface-300 flex items-center justify-between text-xs font-medium">
         <span>{{ $t('page.dashboard.traders.loyalty_level') }}</span>
         <span v-if="hasReputation">{{ $t('page.dashboard.traders.reputation') }}</span>
       </div>
@@ -91,7 +91,7 @@
     </div>
     <div
       v-else-if="isFence"
-      class="text-surface-400 flex items-center justify-between text-xs font-medium"
+      class="text-surface-300 flex items-center justify-between text-xs font-medium"
     >
       <span>{{ $t('page.dashboard.traders.scav_karma') }}</span>
       <ReputationInput

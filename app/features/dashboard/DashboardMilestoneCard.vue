@@ -11,7 +11,9 @@
         :class="['mb-3 h-12 w-12', isAchieved ? iconColorClass : 'text-surface-600']"
       />
       <div class="mb-1 text-3xl font-bold text-white">{{ title }}</div>
-      <div class="text-surface-400 text-xs tracking-wider uppercase">{{ subtitle }}</div>
+      <div class="text-surface-300 text-xs font-medium tracking-wider uppercase">
+        {{ subtitle }}
+      </div>
     </div>
   </div>
 </template>

@@ -45,9 +45,9 @@
             :key="`${entry.date}-${entryIndex}`"
             class="space-y-1"
           >
-            <div class="text-surface-400 text-[11px] font-semibold tracking-wide uppercase">
+            <div class="text-surface-300 text-[11px] font-semibold tracking-wide uppercase">
               <span>{{ formatDate(entry.date) }}</span>
-              <span v-if="entry.label" class="text-surface-500">· {{ entry.label }}</span>
+              <span v-if="entry.label" class="text-surface-400">· {{ entry.label }}</span>
             </div>
             <ul class="text-surface-200 list-disc space-y-1 pl-4">
               <li v-for="(bullet, index) in entry.bullets" :key="index">

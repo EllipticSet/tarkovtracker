@@ -338,11 +338,11 @@ html.no-smooth-scroll {
   --color-raised: var(--color-surface-800);
   --color-hover: var(--color-surface-700);
   --color-divider: var(--color-surface-600);
-  /* Text hierarchy: primary (90%) → secondary (74%) → tertiary (56%) → disabled (38%) */
+  /* Text hierarchy: primary (90%) → secondary (74%) → tertiary (64%) → disabled (44%) */
   --color-text: hsl(0 0% 90%);
   --color-text-secondary: hsl(216 8% 74%);
-  --color-text-muted: hsl(216 7% 57%);
-  --color-text-disabled: hsl(215 6% 38%);
+  --color-text-muted: hsl(216 7% 64%);
+  --color-text-disabled: hsl(215 6% 44%);
 }
 /* Modern override: use OKLCH where supported for better perceptual consistency */
 @supports (color: oklch(0 0 0)) {
