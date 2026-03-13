@@ -1,3 +1,10 @@
+## [1.23.4](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.23.3...v1.23.4) (2026-03-13)
+
+
+### Bug Fixes
+
+* align compact controls vertically ([da4afff](https://github.com/tarkovtracker-org/TarkovTracker/commit/da4afff12fab357f4b03675c1119c75834e40f57))
+
 ## [1.23.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.23.2...v1.23.3) (2026-03-13)
 
 
