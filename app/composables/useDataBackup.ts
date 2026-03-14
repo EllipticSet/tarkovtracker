@@ -1,3 +1,4 @@
+import { cloneStateSnapshot } from '@/stores/tarkov/localStorage';
 import { useTarkovStore } from '@/stores/useTarkov';
 import { MAX_SKILL_LEVEL } from '@/utils/constants';
 import { logger } from '@/utils/logger';
@@ -81,7 +82,7 @@ function createImportedProgressData(
   currentData: UserProgressData | undefined
 ): UserProgressData {
   return {
-    ...structuredClone(importedData),
+    ...cloneStateSnapshot(importedData),
     progressEpoch: Math.min(
       2147483647,
       Math.max(toProgressEpoch(importedData), toProgressEpoch(currentData)) + 1
@@ -282,10 +283,10 @@ export function useDataBackup(): UseDataBackupReturn {
     try {
       const runtimeConfig = useRuntimeConfig();
       const pvpData = stripInternalSyncMetadata(
-        structuredClone(toRaw(tarkovStore.getPvPProgressData()))
+        cloneStateSnapshot(tarkovStore.getPvPProgressData())
       );
       const pveData = stripInternalSyncMetadata(
-        structuredClone(toRaw(tarkovStore.getPvEProgressData()))
+        cloneStateSnapshot(tarkovStore.getPvEProgressData())
       );
       const backup: TarkovTrackerExport = {
         _format: BACKUP_FORMAT,

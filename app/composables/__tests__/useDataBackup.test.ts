@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { reactive } from 'vue';
 const mockLogger = {
   debug: vi.fn(),
   error: vi.fn(),
@@ -132,6 +133,79 @@ describe('useDataBackup', () => {
         expect(revokeObjectURLSpy).toHaveBeenCalledOnce();
         expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:test-backup-url');
         expect(clickSpy).toHaveBeenCalledOnce();
+      } finally {
+        createObjectURLSpy.mockRestore();
+        revokeObjectURLSpy.mockRestore();
+        clickSpy.mockRestore();
+        if (!hadCreateObjectURL) {
+          delete (URL as unknown as Record<string, unknown>).createObjectURL;
+        }
+        if (!hadRevokeObjectURL) {
+          delete (URL as unknown as Record<string, unknown>).revokeObjectURL;
+        }
+      }
+    });
+    it('exports safely when progress data contains proxy-backed nested objects', async () => {
+      const proxySkills = new Proxy({ Endurance: 10 }, {});
+      tarkovStore.getPvPProgressData.mockReturnValueOnce(
+        reactive({
+          level: 5,
+          pmcFaction: 'USEC',
+          displayName: 'ProxyPlayer',
+          xpOffset: 0,
+          taskCompletions: {},
+          taskObjectives: {},
+          hideoutParts: {},
+          hideoutModules: {},
+          traders: {},
+          skills: proxySkills,
+          prestigeLevel: 1,
+          progressEpoch: 4,
+          skillOffsets: {},
+          storyChapters: {},
+        })
+      );
+      const hadCreateObjectURL = typeof URL.createObjectURL === 'function';
+      const hadRevokeObjectURL = typeof URL.revokeObjectURL === 'function';
+      if (!hadCreateObjectURL) {
+        Object.defineProperty(URL, 'createObjectURL', {
+          configurable: true,
+          value: () => '',
+          writable: true,
+        });
+      }
+      if (!hadRevokeObjectURL) {
+        Object.defineProperty(URL, 'revokeObjectURL', {
+          configurable: true,
+          value: () => undefined,
+          writable: true,
+        });
+      }
+      let backupBlob: Blob | null = null;
+      const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockImplementation((object) => {
+        if (object instanceof Blob) {
+          backupBlob = object;
+        }
+        return 'blob:test-backup-url';
+      });
+      const revokeObjectURLSpy = vi
+        .spyOn(URL, 'revokeObjectURL')
+        .mockImplementation(() => undefined);
+      const clickSpy = vi
+        .spyOn(HTMLAnchorElement.prototype, 'click')
+        .mockImplementation(() => undefined);
+      try {
+        const { exportProgress, exportError } = await loadComposable();
+        await expect(exportProgress()).resolves.toBeUndefined();
+        expect(exportError.value).toBeNull();
+        expect(backupBlob).toBeInstanceOf(Blob);
+        const backupJson = JSON.parse(await backupBlob!.text()) as Record<string, unknown>;
+        expect(backupJson.pvp).toEqual(
+          expect.objectContaining({
+            displayName: 'ProxyPlayer',
+            skills: { Endurance: 10 },
+          })
+        );
       } finally {
         createObjectURLSpy.mockRestore();
         revokeObjectURLSpy.mockRestore();
