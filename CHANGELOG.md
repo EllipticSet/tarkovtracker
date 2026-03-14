@@ -1,3 +1,10 @@
+## [1.25.6](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.25.5...v1.25.6) (2026-03-14)
+
+
+### Bug Fixes
+
+* clone reactive backup state safely ([112c2eb](https://github.com/tarkovtracker-org/TarkovTracker/commit/112c2ebd3ca9f11df5fc70f5350d54737534e96e))
+
 ## [1.25.5](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.25.4...v1.25.5) (2026-03-14)
 
 
