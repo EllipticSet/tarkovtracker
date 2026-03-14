@@ -1,3 +1,10 @@
+# [1.25.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.24.0...v1.25.0) (2026-03-14)
+
+
+### Features
+
+* add trader progress gradients ([158dc4b](https://github.com/tarkovtracker-org/TarkovTracker/commit/158dc4bc3aa17bc6dad2b404f4c3c423dba8fb44))
+
 # [1.24.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.23.4...v1.24.0) (2026-03-13)
 
 
