@@ -1,3 +1,10 @@
+## [1.25.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.25.0...v1.25.1) (2026-03-14)
+
+
+### Bug Fixes
+
+* repair ga4 dataLayer dispatch ([5f52d4a](https://github.com/tarkovtracker-org/TarkovTracker/commit/5f52d4aa48da74f2ce90f655724af49a0ec04ec4))
+
 # [1.25.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.24.0...v1.25.0) (2026-03-14)
 
 
