@@ -14,11 +14,13 @@ const {
 } = vi.hoisted(() => ({
   backupFns: {
     confirmBackupImport: vi.fn(async () => undefined),
+    exportDebugSnapshot: vi.fn(async () => undefined),
     exportProgress: vi.fn(async () => undefined),
     parseBackupFile: vi.fn(async () => undefined),
     resetImport: vi.fn(),
   },
   backupState: {
+    debugExportError: { __v_isRef: true as const, value: null as string | null },
     exportError: { __v_isRef: true as const, value: null as string | null },
     importError: { __v_isRef: true as const, value: null as string | null },
     importPreview: { __v_isRef: true as const, value: null as Record<string, unknown> | null },
@@ -66,6 +68,8 @@ mockNuxtImport('useToast', () => () => ({
 }));
 vi.mock('@/composables/useDataBackup', () => ({
   useDataBackup: () => ({
+    exportDebugSnapshot: backupFns.exportDebugSnapshot,
+    debugExportError: backupState.debugExportError,
     exportProgress: backupFns.exportProgress,
     exportError: backupState.exportError,
     importState: backupState.importState,
@@ -150,6 +154,7 @@ const asVm = <T>(vm: unknown) => vm as T;
 describe('DataManagementCard', () => {
   beforeEach(() => {
     backupFns.confirmBackupImport.mockReset();
+    backupFns.exportDebugSnapshot.mockReset();
     backupFns.exportProgress.mockReset();
     backupFns.parseBackupFile.mockReset();
     backupFns.resetImport.mockReset();
@@ -162,6 +167,7 @@ describe('DataManagementCard', () => {
     eftLogsFns.reset.mockReset();
     eftLogsFns.setIncludedVersions.mockReset();
     toastAddMock.mockReset();
+    backupState.debugExportError.value = null;
     backupState.exportError.value = null;
     backupState.importError.value = null;
     backupState.importPreview.value = null;
@@ -223,6 +229,23 @@ describe('DataManagementCard', () => {
         color: 'error',
         description: 'Export failed',
         title: 'settings.data_management.export_error_title',
+      })
+    );
+  });
+  it('shows toast when debug export fails', async () => {
+    backupState.debugExportError.value = 'Debug export failed';
+    backupFns.exportDebugSnapshot.mockImplementation(async () => {
+      throw new Error('debug export failed');
+    });
+    const wrapper = createWrapper();
+    const exportButton = findButtonByText(wrapper, 'settings.data_management.debug_export_button');
+    expect(exportButton).toBeTruthy();
+    await exportButton!.trigger('click');
+    expect(toastAddMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        color: 'error',
+        description: 'Debug export failed',
+        title: 'settings.data_management.debug_export_error_title',
       })
     );
   });

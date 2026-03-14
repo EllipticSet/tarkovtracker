@@ -1300,6 +1300,8 @@
       export_title: 'Exportar y copia de seguridad',
       export_description: 'Descarga una copia de seguridad de tu progreso para los modos PvP y PvE.',
       export_button: 'Exportar copia de seguridad',
+      debug_export_button: 'Exportar instantánea de depuración',
+      debug_export_description: 'Descarga una instantánea saneada de la cuenta para depurar problemas al iniciar sesión. Excluye tokens de autenticación, correo electrónico e imágenes de perfil.',
       import_title: 'Importar',
       import_backup_button: 'Importar copia de TarkovTracker',
       import_tarkovdev_button: 'Importar perfil de Tarkov.dev',
@@ -1320,6 +1322,7 @@
       import_success_description: 'Tu progreso se ha restaurado correctamente.',
       import_error_title: 'Error de importación',
       export_error_title: 'Error de exportación',
+      debug_export_error_title: 'Error al exportar la depuración',
       reset_title: 'Restablecer progreso',
     },
     data_migration: {

@@ -1300,6 +1300,8 @@
       export_title: 'Export & Sicherung',
       export_description: 'Lade eine Sicherung deiner Fortschrittsdaten für die Modi PvP und PvE herunter.',
       export_button: 'Fortschrittssicherung exportieren',
+      debug_export_button: 'Debug-Snapshot exportieren',
+      debug_export_description: 'Lädt einen bereinigten Kontostand für die Fehlersuche bei angemeldeten Problemen herunter. Auth-Tokens, E-Mail und Profilbilder werden ausgeschlossen.',
       import_title: 'Import',
       import_backup_button: 'TarkovTracker-Sicherung importieren',
       import_tarkovdev_button: 'Tarkov.dev-Profil importieren',
@@ -1320,6 +1322,7 @@
       import_success_description: 'Deine Fortschrittsdaten wurden erfolgreich wiederhergestellt.',
       import_error_title: 'Import fehlgeschlagen',
       export_error_title: 'Export fehlgeschlagen',
+      debug_export_error_title: 'Debug-Export fehlgeschlagen',
       reset_title: 'Fortschritt zurücksetzen',
     },
     data_migration: {

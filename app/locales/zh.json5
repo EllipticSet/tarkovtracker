@@ -1300,6 +1300,8 @@
       export_title: '导出与备份',
       export_description: '下载 PvP 和 PvE 模式的进度备份。',
       export_button: '导出进度备份',
+      debug_export_button: '导出调试快照',
+      debug_export_description: '下载用于排查登录问题的脱敏账户快照，不包含身份验证令牌、电子邮件和头像图片。',
       import_title: '导入',
       import_backup_button: '导入 TarkovTracker 备份',
       import_tarkovdev_button: '导入 Tarkov.dev 档案',
@@ -1320,6 +1322,7 @@
       import_success_description: '您的进度数据已成功恢复。',
       import_error_title: '导入失败',
       export_error_title: '导出失败',
+      debug_export_error_title: '调试导出失败',
       reset_title: '重置进度',
     },
     data_migration: {

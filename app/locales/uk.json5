@@ -1300,6 +1300,8 @@
       export_title: 'Експорт і резервна копія',
       export_description: 'Завантажте резервну копію прогресу для режимів PvP та PvE.',
       export_button: 'Експортувати резервну копію',
+      debug_export_button: 'Експортувати знімок налагодження',
+      debug_export_description: 'Завантажує знеособлений знімок акаунта для налагодження проблем під час входу. Токени автентифікації, email і зображення профілю виключені.',
       import_title: 'Імпорт',
       import_backup_button: 'Імпортувати копію TarkovTracker',
       import_tarkovdev_button: 'Імпортувати профіль Tarkov.dev',
@@ -1320,6 +1322,7 @@
       import_success_description: 'Ваш прогрес було успішно відновлено.',
       import_error_title: 'Помилка імпорту',
       export_error_title: 'Помилка експорту',
+      debug_export_error_title: 'Не вдалося експортувати знімок налагодження',
       reset_title: 'Скинути прогрес',
     },
     data_migration: {

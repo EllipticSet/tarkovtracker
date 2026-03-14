@@ -1,9 +1,18 @@
+import { useAnalyticsConsent, type AnalyticsConsentState } from '@/composables/useAnalyticsConsent';
 import { cloneStateSnapshot } from '@/stores/tarkov/localStorage';
+import {
+  getPersistedPreferencesState,
+  type PersistedPreferencesState,
+  usePreferencesStore,
+} from '@/stores/usePreferences';
 import { useTarkovStore } from '@/stores/useTarkov';
 import { MAX_SKILL_LEVEL } from '@/utils/constants';
 import { logger } from '@/utils/logger';
+import { LEGACY_STORAGE_KEYS, STORAGE_KEYS } from '@/utils/storageKeys';
+import { parseUserScopedStorage } from '@/utils/userScopedStorage';
 import type { UserProgressData, UserState } from '@/stores/progressState';
 const BACKUP_FORMAT = 'tarkovtracker-backup' as const;
+const DEBUG_EXPORT_FORMAT = 'tarkovtracker-debug-export' as const;
 const SUPPORTED_VERSIONS = [1] as const;
 type GameMode = 'pvp' | 'pve';
 type Faction = 'USEC' | 'BEAR';
@@ -17,6 +26,59 @@ interface TarkovTrackerExport {
   tarkovUid: number | null;
   pvp: UserProgressData;
   pve: UserProgressData;
+}
+interface DebugExportAuthContext {
+  loggedIn: boolean;
+  provider: string | null;
+  providers: string[];
+  userIdFingerprint: string | null;
+  createdAt: string | null;
+  lastLoginAt: string | null;
+  hasAuthSessionHint: boolean;
+}
+interface DebugExportRuntimeContext {
+  path: string;
+  query: string;
+  hash: string;
+  language: string | null;
+  languages: string[];
+  timeZone: string | null;
+  userAgent: string | null;
+}
+interface DebugExportStorageSnapshot<T> {
+  storageKey: string;
+  format: 'scoped' | 'legacy' | 'unparseable';
+  ownerUserFingerprint: string | null;
+  ownerMatchesCurrentUser: boolean | null;
+  timestamp: number | null;
+  data: T | null;
+  rawSize: number;
+}
+interface DebugExportStorageContext {
+  authStorageKeyCount: number;
+  localStorageKeys: string[];
+  sessionStorageKeys: string[];
+  progress: DebugExportStorageSnapshot<UserState> | null;
+  preferences: DebugExportStorageSnapshot<PersistedPreferencesState> | null;
+  progressBackups: Array<{
+    storageKey: string;
+    ownerFingerprint: string | null;
+    createdAt: number | null;
+  }>;
+}
+interface DebugExportPayload {
+  _format: typeof DEBUG_EXPORT_FORMAT;
+  _version: number;
+  exportedAt: number;
+  appVersion: string;
+  auth: DebugExportAuthContext;
+  runtime: DebugExportRuntimeContext;
+  state: {
+    tarkov: UserState;
+    preferences: PersistedPreferencesState;
+    analyticsConsent: AnalyticsConsentState;
+  };
+  storage: DebugExportStorageContext;
 }
 export interface BackupPreviewData {
   exportedAt: number;
@@ -43,6 +105,8 @@ type BackupImportTargetModes = { pvp: boolean; pve: boolean };
 export interface UseDataBackupReturn {
   exportProgress: () => Promise<void>;
   exportError: Ref<string | null>;
+  exportDebugSnapshot: () => Promise<void>;
+  debugExportError: Ref<string | null>;
   importState: Ref<BackupImportState>;
   importPreview: Ref<BackupPreviewData | null>;
   importError: Ref<string | null>;
@@ -68,6 +132,16 @@ const ALLOWED_PROGRESS_KEYS = new Set([
   'tarkovDevProfile',
 ]);
 const VALID_FACTIONS = new Set<Faction>(['USEC', 'BEAR']);
+const PII_DEBUG_KEYS = new Set([
+  'avatar_url',
+  'avatarUrl',
+  'displayName',
+  'email',
+  'nickname',
+  'photoURL',
+  'picture',
+  'username',
+]);
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -260,9 +334,275 @@ function stripInternalSyncMetadata(data: UserProgressData): UserProgressData {
   const { apiUpdateHistory: _, lastApiUpdate: __, ...rest } = data;
   return rest as UserProgressData;
 }
+async function fingerprintValue(value: string | number | null | undefined): Promise<string | null> {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+  const normalizedValue = String(value);
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi?.subtle) {
+    const digest = await cryptoApi.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode(normalizedValue)
+    );
+    return `sha256:${Array.from(new Uint8Array(digest))
+      .slice(0, 8)
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('')}`;
+  }
+  let hash = 2166136261;
+  for (const char of normalizedValue) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `fnv1a:${(hash >>> 0).toString(16).padStart(8, '0')}`;
+}
+function sanitizeDebugObject<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeDebugObject(item)) as T;
+  }
+  if (!isPlainObject(value)) {
+    return value;
+  }
+  return Object.fromEntries(
+    Object.entries(value).map(([key, entryValue]) => {
+      if (PII_DEBUG_KEYS.has(key)) {
+        return [key, null];
+      }
+      return [key, sanitizeDebugObject(entryValue)];
+    })
+  ) as T;
+}
+async function sanitizeTaskUserView(value: string | null): Promise<string | null> {
+  if (!value || value === 'all' || value === 'self') {
+    return value;
+  }
+  const fingerprint = await fingerprintValue(value);
+  return fingerprint ? `user:${fingerprint}` : null;
+}
+async function sanitizePreferencesForDebug(
+  state: PersistedPreferencesState
+): Promise<PersistedPreferencesState> {
+  const sanitizedState = cloneStateSnapshot(state);
+  const rawTeamHide = isPlainObject(sanitizedState.teamHide) ? sanitizedState.teamHide : {};
+  const teamHideEntries = await Promise.all(
+    Object.entries(rawTeamHide).map(async ([teamId, hidden]) => {
+      const fingerprint = await fingerprintValue(teamId);
+      return [fingerprint ? `user:${fingerprint}` : 'user:unknown', hidden] as const;
+    })
+  );
+  sanitizedState.teamHide = Object.fromEntries(teamHideEntries);
+  sanitizedState.taskUserView = await sanitizeTaskUserView(sanitizedState.taskUserView ?? null);
+  if (Array.isArray(sanitizedState.taskFilterPresets)) {
+    sanitizedState.taskFilterPresets = await Promise.all(
+      sanitizedState.taskFilterPresets.map(async (preset, index) => ({
+        ...preset,
+        name: `Preset ${index + 1}`,
+        settings: {
+          ...preset.settings,
+          taskUserView: await sanitizeTaskUserView(preset.settings.taskUserView),
+        },
+      }))
+    );
+  }
+  return sanitizedState;
+}
+function sanitizeProgressForDebug(data: UserProgressData): UserProgressData {
+  const sanitizedData = stripInternalSyncMetadata(cloneStateSnapshot(data));
+  sanitizedData.displayName = null;
+  if (sanitizedData.tarkovDevProfile) {
+    sanitizedData.tarkovDevProfile = sanitizeDebugObject(sanitizedData.tarkovDevProfile);
+  }
+  return sanitizedData;
+}
+async function sanitizeTarkovStateForDebug(state: UserState): Promise<UserState> {
+  const clonedState = cloneStateSnapshot(state);
+  clonedState.tarkovUid = null;
+  clonedState.pvp = sanitizeProgressForDebug(clonedState.pvp);
+  clonedState.pve = sanitizeProgressForDebug(clonedState.pve);
+  return clonedState;
+}
+function getStorageKeys(storage: Storage | null): string[] {
+  if (!storage) {
+    return [];
+  }
+  const keys: string[] = [];
+  for (let index = 0; index < storage.length; index += 1) {
+    const key = storage.key(index);
+    if (key) {
+      keys.push(key);
+    }
+  }
+  return keys;
+}
+function isSupabaseAuthStorageKey(key: string): boolean {
+  return key.endsWith('-auth-token') || key.endsWith('-code-verifier');
+}
+async function sanitizeStorageKey(key: string): Promise<string> {
+  if (
+    key.startsWith(STORAGE_KEYS.progressBackupPrefix) ||
+    key.startsWith(LEGACY_STORAGE_KEYS.progressBackupPrefix)
+  ) {
+    const prefix = key.startsWith(STORAGE_KEYS.progressBackupPrefix)
+      ? STORAGE_KEYS.progressBackupPrefix
+      : LEGACY_STORAGE_KEYS.progressBackupPrefix;
+    const suffix = key.slice(prefix.length);
+    const separatorIndex = suffix.lastIndexOf('_');
+    const owner = separatorIndex >= 0 ? suffix.slice(0, separatorIndex) : suffix;
+    const createdAtRaw = separatorIndex >= 0 ? suffix.slice(separatorIndex + 1) : '';
+    const ownerFingerprint =
+      owner === 'anonymous' ? 'anonymous' : ((await fingerprintValue(owner)) ?? 'unknown');
+    const createdAt = Number.parseInt(createdAtRaw, 10);
+    return `${prefix}{owner:${ownerFingerprint},createdAt:${
+      Number.isFinite(createdAt) ? createdAt : 'unknown'
+    }}`;
+  }
+  return key;
+}
+async function sanitizeStorageKeys(storage: Storage | null): Promise<string[]> {
+  const keys = getStorageKeys(storage).filter((key) => !isSupabaseAuthStorageKey(key));
+  return await Promise.all(keys.map((key) => sanitizeStorageKey(key)));
+}
+async function buildProgressBackupSnapshots(
+  storage: Storage | null
+): Promise<DebugExportStorageContext['progressBackups']> {
+  const backupKeys = getStorageKeys(storage).filter(
+    (key) =>
+      key.startsWith(STORAGE_KEYS.progressBackupPrefix) ||
+      key.startsWith(LEGACY_STORAGE_KEYS.progressBackupPrefix)
+  );
+  return await Promise.all(
+    backupKeys.map(async (key) => {
+      const prefix = key.startsWith(STORAGE_KEYS.progressBackupPrefix)
+        ? STORAGE_KEYS.progressBackupPrefix
+        : LEGACY_STORAGE_KEYS.progressBackupPrefix;
+      const suffix = key.slice(prefix.length);
+      const separatorIndex = suffix.lastIndexOf('_');
+      const owner = separatorIndex >= 0 ? suffix.slice(0, separatorIndex) : suffix;
+      const createdAtRaw = separatorIndex >= 0 ? suffix.slice(separatorIndex + 1) : '';
+      const createdAt = Number.parseInt(createdAtRaw, 10);
+      return {
+        storageKey: await sanitizeStorageKey(key),
+        ownerFingerprint: owner === 'anonymous' ? 'anonymous' : await fingerprintValue(owner),
+        createdAt: Number.isFinite(createdAt) ? createdAt : null,
+      };
+    })
+  );
+}
+async function buildProgressStorageSnapshot(
+  rawValue: string | null,
+  currentUserId: string | null
+): Promise<DebugExportStorageSnapshot<UserState> | null> {
+  if (!rawValue) {
+    return null;
+  }
+  const rawSize = rawValue.length;
+  const wrapped = parseUserScopedStorage<UserState>(rawValue);
+  if (wrapped) {
+    return {
+      storageKey: STORAGE_KEYS.progress,
+      format: 'scoped',
+      ownerUserFingerprint: await fingerprintValue(wrapped._userId),
+      ownerMatchesCurrentUser:
+        currentUserId === null ? wrapped._userId === null : wrapped._userId === currentUserId,
+      timestamp: wrapped._timestamp ?? null,
+      data: await sanitizeTarkovStateForDebug(wrapped.data),
+      rawSize,
+    };
+  }
+  try {
+    return {
+      storageKey: STORAGE_KEYS.progress,
+      format: 'legacy',
+      ownerUserFingerprint: null,
+      ownerMatchesCurrentUser: null,
+      timestamp: null,
+      data: await sanitizeTarkovStateForDebug(JSON.parse(rawValue) as UserState),
+      rawSize,
+    };
+  } catch {
+    return {
+      storageKey: STORAGE_KEYS.progress,
+      format: 'unparseable',
+      ownerUserFingerprint: null,
+      ownerMatchesCurrentUser: null,
+      timestamp: null,
+      data: null,
+      rawSize,
+    };
+  }
+}
+async function buildPreferencesStorageSnapshot(
+  rawValue: string | null,
+  currentUserId: string | null
+): Promise<DebugExportStorageSnapshot<PersistedPreferencesState> | null> {
+  if (!rawValue) {
+    return null;
+  }
+  const rawSize = rawValue.length;
+  const wrapped = parseUserScopedStorage<PersistedPreferencesState>(rawValue);
+  if (wrapped) {
+    return {
+      storageKey: STORAGE_KEYS.preferences,
+      format: 'scoped',
+      ownerUserFingerprint: await fingerprintValue(wrapped._userId),
+      ownerMatchesCurrentUser:
+        currentUserId === null ? wrapped._userId === null : wrapped._userId === currentUserId,
+      timestamp: wrapped._timestamp ?? null,
+      data: await sanitizePreferencesForDebug(getPersistedPreferencesState(wrapped.data)),
+      rawSize,
+    };
+  }
+  try {
+    return {
+      storageKey: STORAGE_KEYS.preferences,
+      format: 'legacy',
+      ownerUserFingerprint: null,
+      ownerMatchesCurrentUser: null,
+      timestamp: null,
+      data: await sanitizePreferencesForDebug(
+        getPersistedPreferencesState(JSON.parse(rawValue) as PersistedPreferencesState)
+      ),
+      rawSize,
+    };
+  } catch {
+    return {
+      storageKey: STORAGE_KEYS.preferences,
+      format: 'unparseable',
+      ownerUserFingerprint: null,
+      ownerMatchesCurrentUser: null,
+      timestamp: null,
+      data: null,
+      rawSize,
+    };
+  }
+}
+async function downloadJsonFile(filenamePrefix: string, payload: unknown): Promise<void> {
+  let url: string | null = null;
+  try {
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    url = URL.createObjectURL(blob);
+    const date = new Date().toISOString().split('T')[0];
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${filenamePrefix}-${date}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+  } finally {
+    if (url) {
+      URL.revokeObjectURL(url);
+    }
+  }
+}
 export function useDataBackup(): UseDataBackupReturn {
   const tarkovStore = useTarkovStore();
+  const preferencesStore = usePreferencesStore();
+  const analyticsConsent = useAnalyticsConsent();
+  const { $supabase } = useNuxtApp();
   const exportError = ref<string | null>(null);
+  const debugExportError = ref<string | null>(null);
   const importState = ref<BackupImportState>('idle');
   const importPreview = ref<BackupPreviewData | null>(null);
   const importError = ref<string | null>(null);
@@ -279,7 +619,6 @@ export function useDataBackup(): UseDataBackupReturn {
   }
   async function exportProgress(): Promise<void> {
     exportError.value = null;
-    let url: string | null = null;
     try {
       const runtimeConfig = useRuntimeConfig();
       const pvpData = stripInternalSyncMetadata(
@@ -299,25 +638,74 @@ export function useDataBackup(): UseDataBackupReturn {
         pvp: pvpData,
         pve: pveData,
       };
-      const json = JSON.stringify(backup, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
-      url = URL.createObjectURL(blob);
-      const date = new Date().toISOString().split('T')[0];
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `tarkovtracker-backup-${date}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      await downloadJsonFile('tarkovtracker-backup', backup);
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       exportError.value = `Failed to export backup: ${detail}`;
       logger.error('[DataBackup] Export error:', error);
       throw error instanceof Error ? error : new Error(detail);
-    } finally {
-      if (url) {
-        URL.revokeObjectURL(url);
-      }
+    }
+  }
+  async function exportDebugSnapshot(): Promise<void> {
+    debugExportError.value = null;
+    try {
+      const runtimeConfig = useRuntimeConfig();
+      const currentUserId = $supabase.user.id ?? null;
+      const currentPreferences = await sanitizePreferencesForDebug(
+        getPersistedPreferencesState(preferencesStore.$state)
+      );
+      const rawProgressStorage =
+        localStorage.getItem(STORAGE_KEYS.progress) ??
+        localStorage.getItem(LEGACY_STORAGE_KEYS.progress);
+      const rawPreferencesStorage =
+        localStorage.getItem(STORAGE_KEYS.preferences) ??
+        localStorage.getItem(LEGACY_STORAGE_KEYS.preferences);
+      const authStorageKeyCount = getStorageKeys(localStorage).filter((key) =>
+        isSupabaseAuthStorageKey(key)
+      ).length;
+      const debugPayload: DebugExportPayload = {
+        _format: DEBUG_EXPORT_FORMAT,
+        _version: 1,
+        exportedAt: Date.now(),
+        appVersion: String(runtimeConfig.public.appVersion ?? 'unknown'),
+        auth: {
+          loggedIn: $supabase.user.loggedIn,
+          provider: $supabase.user.provider ?? null,
+          providers: Array.isArray($supabase.user.providers) ? [...$supabase.user.providers] : [],
+          userIdFingerprint: await fingerprintValue(currentUserId),
+          createdAt: $supabase.user.createdAt ?? null,
+          lastLoginAt: $supabase.user.lastLoginAt ?? null,
+          hasAuthSessionHint: authStorageKeyCount > 0,
+        },
+        runtime: {
+          path: window.location.pathname,
+          query: window.location.search,
+          hash: window.location.hash,
+          language: navigator.language ?? null,
+          languages: Array.isArray(navigator.languages) ? [...navigator.languages] : [],
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? null,
+          userAgent: navigator.userAgent ?? null,
+        },
+        state: {
+          tarkov: await sanitizeTarkovStateForDebug(tarkovStore.$state),
+          preferences: currentPreferences,
+          analyticsConsent: cloneStateSnapshot(analyticsConsent.state.value),
+        },
+        storage: {
+          authStorageKeyCount,
+          localStorageKeys: await sanitizeStorageKeys(localStorage),
+          sessionStorageKeys: await sanitizeStorageKeys(sessionStorage),
+          progress: await buildProgressStorageSnapshot(rawProgressStorage, currentUserId),
+          preferences: await buildPreferencesStorageSnapshot(rawPreferencesStorage, currentUserId),
+          progressBackups: await buildProgressBackupSnapshots(localStorage),
+        },
+      };
+      await downloadJsonFile('tarkovtracker-debug-export', debugPayload);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      debugExportError.value = `Failed to export debug snapshot: ${detail}`;
+      logger.error('[DataBackup] Debug export error:', error);
+      throw error instanceof Error ? error : new Error(detail);
     }
   }
   async function parseBackupFile(file: File): Promise<void> {
@@ -396,6 +784,8 @@ export function useDataBackup(): UseDataBackupReturn {
   return {
     exportProgress,
     exportError,
+    exportDebugSnapshot,
+    debugExportError,
     importState,
     importPreview,
     importError,

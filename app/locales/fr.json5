@@ -1300,6 +1300,8 @@
       export_title: 'Export et sauvegarde',
       export_description: 'Téléchargez une sauvegarde de votre progression pour les modes PvP et PvE.',
       export_button: 'Exporter la sauvegarde',
+      debug_export_button: 'Exporter l’instantané de débogage',
+      debug_export_description: 'Télécharge un instantané de compte nettoyé pour diagnostiquer les problèmes en mode connecté. Les jetons d’authentification, l’e-mail et les images de profil sont exclus.',
       import_title: 'Importer',
       import_backup_button: 'Importer une sauvegarde TarkovTracker',
       import_tarkovdev_button: 'Importer un profil Tarkov.dev',
@@ -1320,6 +1322,7 @@
       import_success_description: 'Votre progression a été restaurée avec succès.',
       import_error_title: "Échec de l'importation",
       export_error_title: "Échec de l'exportation",
+      debug_export_error_title: 'Échec de l’export de débogage',
       reset_title: 'Réinitialiser la progression',
     },
     prestige_pvp: {

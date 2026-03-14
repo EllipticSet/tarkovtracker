@@ -16,16 +16,31 @@
           <p class="text-surface-400 text-sm">
             {{ $t('settings.data_management.export_description') }}
           </p>
-          <UButton
-            icon="i-mdi-download"
-            block
-            :ui="{
-              base: 'bg-primary-900 hover:bg-primary-800 active:bg-primary-700 text-primary-200 focus-visible:ring focus-visible:ring-primary-500',
-            }"
-            @click="handleExportProgress"
-          >
-            {{ $t('settings.data_management.export_button') }}
-          </UButton>
+          <div class="grid gap-3 md:grid-cols-2">
+            <UButton
+              icon="i-mdi-download"
+              block
+              :ui="{
+                base: 'bg-primary-900 hover:bg-primary-800 active:bg-primary-700 text-primary-200 focus-visible:ring focus-visible:ring-primary-500',
+              }"
+              @click="handleExportProgress"
+            >
+              {{ $t('settings.data_management.export_button') }}
+            </UButton>
+            <UButton
+              icon="i-mdi-bug-outline"
+              block
+              :ui="{
+                base: 'bg-warning-900 hover:bg-warning-800 active:bg-warning-700 text-warning-200 focus-visible:ring focus-visible:ring-warning-500',
+              }"
+              @click="handleExportDebugSnapshot"
+            >
+              {{ $t('settings.data_management.debug_export_button') }}
+            </UButton>
+          </div>
+          <p class="text-surface-500 text-xs">
+            {{ $t('settings.data_management.debug_export_description') }}
+          </p>
         </div>
         <USeparator />
         <!-- Import -->
@@ -646,6 +661,8 @@
   const {
     exportProgress,
     exportError: backupExportError,
+    exportDebugSnapshot,
+    debugExportError,
     importState: backupImportState,
     importPreview: backupPreview,
     importError: backupImportError,
@@ -664,6 +681,19 @@
       toast.add({
         title: t('settings.data_management.export_error_title'),
         description: backupExportError.value,
+        color: 'error',
+      });
+    }
+  }
+  async function handleExportDebugSnapshot() {
+    try {
+      await exportDebugSnapshot();
+    } catch (err) {
+      logger.error('DataManagementCard: exportDebugSnapshot failed', err, debugExportError.value);
+      if (!debugExportError.value) return;
+      toast.add({
+        title: t('settings.data_management.debug_export_error_title'),
+        description: debugExportError.value,
         color: 'error',
       });
     }

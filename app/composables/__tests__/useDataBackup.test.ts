@@ -1,12 +1,78 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { reactive } from 'vue';
-const mockLogger = {
-  debug: vi.fn(),
-  error: vi.fn(),
-  info: vi.fn(),
-  warn: vi.fn(),
-};
+import { STORAGE_KEYS } from '@/utils/storageKeys';
+const { mockLogger, preferencesStore, supabaseUser } = vi.hoisted(() => ({
+  mockLogger: {
+    debug: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+  },
+  preferencesStore: {
+    $state: {
+      taskFilterPresets: [
+        {
+          id: 'preset-1',
+          name: 'Sensitive Preset',
+          settings: {
+            taskUserView: 'teammate-3',
+          },
+        },
+      ],
+      taskUserView: 'teammate-2',
+      teamHide: {
+        'teammate-1': true,
+      },
+    } as Record<string, unknown>,
+  },
+  supabaseUser: {
+    createdAt: '2025-01-01T00:00:00.000Z',
+    email: 'player@example.com',
+    id: 'user-123',
+    lastLoginAt: '2025-02-01T00:00:00.000Z',
+    loggedIn: true,
+    provider: 'discord',
+    providers: ['discord'],
+  },
+}));
 const tarkovStore = {
+  $state: {
+    currentGameMode: 'pvp',
+    gameEdition: 1,
+    pvp: {
+      displayName: 'CurrentUser',
+      hideoutModules: {},
+      hideoutParts: {},
+      pmcFaction: 'USEC',
+      prestigeLevel: 1,
+      progressEpoch: 4,
+      skillOffsets: {},
+      skills: { Endurance: 10 },
+      storyChapters: {},
+      taskCompletions: { task1: { complete: true, timestamp: 1000 } },
+      taskObjectives: {},
+      traders: {},
+      xpOffset: 0,
+      level: 5,
+    },
+    pve: {
+      displayName: null,
+      hideoutModules: {},
+      hideoutParts: {},
+      pmcFaction: 'BEAR',
+      prestigeLevel: 0,
+      progressEpoch: 0,
+      skillOffsets: {},
+      skills: {},
+      storyChapters: {},
+      taskCompletions: {},
+      taskObjectives: {},
+      traders: {},
+      xpOffset: 0,
+      level: 1,
+    },
+    tarkovUid: 987654,
+  },
   getCurrentGameMode: vi.fn(() => 'pvp'),
   getGameEdition: vi.fn(() => 1),
   getTarkovUid: vi.fn(() => null),
@@ -47,6 +113,24 @@ const tarkovStore = {
 vi.mock('@/stores/useTarkov', () => ({
   useTarkovStore: () => tarkovStore,
 }));
+vi.mock('@/stores/usePreferences', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/stores/usePreferences')>();
+  return {
+    ...actual,
+    usePreferencesStore: () => preferencesStore,
+  };
+});
+vi.mock('@/composables/useAnalyticsConsent', () => ({
+  useAnalyticsConsent: () => ({
+    state: {
+      __v_isRef: true as const,
+      value: {
+        status: 'accepted',
+        updatedAt: '2025-03-01T00:00:00.000Z',
+      },
+    },
+  }),
+}));
 vi.mock('@/utils/logger', () => ({
   logger: mockLogger,
 }));
@@ -57,6 +141,46 @@ const createFile = (text: string): File =>
   ({
     text: vi.fn().mockResolvedValue(text),
   }) as unknown as File;
+type DebugExportTestJson = {
+  _format: string;
+  auth: {
+    hasAuthSessionHint: boolean;
+  };
+  runtime: {
+    hash: string;
+    path: string;
+    query: string;
+  };
+  state: {
+    preferences: {
+      taskFilterPresets: Array<{
+        name: string;
+        settings: {
+          taskUserView: string | null;
+        };
+      }>;
+      taskUserView: string | null;
+      teamHide: Record<string, boolean>;
+    };
+    tarkov: {
+      pvp: {
+        displayName: string | null;
+      };
+      tarkovUid: number | null;
+    };
+  };
+  storage: {
+    authStorageKeyCount: number;
+    localStorageKeys: string[];
+    progress: {
+      ownerMatchesCurrentUser: boolean | null;
+      ownerUserFingerprint: string | null;
+    };
+    progressBackups: Array<{
+      storageKey: string;
+    }>;
+  };
+};
 const loadComposable = async () => {
   const mod = await import('@/composables/useDataBackup');
   return mod.useDataBackup();
@@ -65,6 +189,38 @@ describe('useDataBackup', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
+    const useNuxtAppStub = () => ({
+      $supabase: {
+        user: supabaseUser,
+      },
+    });
+    vi.stubGlobal('useNuxtApp', useNuxtAppStub);
+    Object.assign(globalThis, { useNuxtApp: useNuxtAppStub });
+    localStorage.clear();
+    sessionStorage.clear();
+    window.history.replaceState({}, '', '/');
+    preferencesStore.$state = {
+      taskFilterPresets: [
+        {
+          id: 'preset-1',
+          name: 'Sensitive Preset',
+          settings: {
+            taskUserView: 'teammate-3',
+          },
+        },
+      ],
+      taskUserView: 'teammate-2',
+      teamHide: {
+        'teammate-1': true,
+      },
+    };
+    supabaseUser.createdAt = '2025-01-01T00:00:00.000Z';
+    supabaseUser.email = 'player@example.com';
+    supabaseUser.id = 'user-123';
+    supabaseUser.lastLoginAt = '2025-02-01T00:00:00.000Z';
+    supabaseUser.loggedIn = true;
+    supabaseUser.provider = 'discord';
+    supabaseUser.providers = ['discord'];
   });
   describe('exportProgress', () => {
     it('creates backup JSON with expected app and progress data', async () => {
@@ -206,6 +362,118 @@ describe('useDataBackup', () => {
             skills: { Endurance: 10 },
           })
         );
+      } finally {
+        createObjectURLSpy.mockRestore();
+        revokeObjectURLSpy.mockRestore();
+        clickSpy.mockRestore();
+        if (!hadCreateObjectURL) {
+          delete (URL as unknown as Record<string, unknown>).createObjectURL;
+        }
+        if (!hadRevokeObjectURL) {
+          delete (URL as unknown as Record<string, unknown>).revokeObjectURL;
+        }
+      }
+    });
+  });
+  describe('exportDebugSnapshot', () => {
+    it('exports a sanitized debug snapshot without auth secrets or player identifiers', async () => {
+      localStorage.setItem(
+        STORAGE_KEYS.progress,
+        JSON.stringify({
+          _timestamp: 1700000000000,
+          _userId: 'user-123',
+          data: tarkovStore.$state,
+        })
+      );
+      localStorage.setItem(
+        STORAGE_KEYS.preferences,
+        JSON.stringify({
+          _timestamp: 1700000005000,
+          _userId: 'user-123',
+          data: preferencesStore.$state,
+        })
+      );
+      localStorage.setItem('sb-localhost-auth-token', 'token-secret');
+      localStorage.setItem(`${STORAGE_KEYS.progressBackupPrefix}user-123_1700000009999`, 'backup');
+      sessionStorage.setItem(STORAGE_KEYS.sessionDataMigrated, 'true');
+      window.history.replaceState({}, '', '/settings?tab=data#debug');
+      let backupBlob: Blob | null = null;
+      const hadCreateObjectURL = typeof URL.createObjectURL === 'function';
+      const hadRevokeObjectURL = typeof URL.revokeObjectURL === 'function';
+      if (!hadCreateObjectURL) {
+        Object.defineProperty(URL, 'createObjectURL', {
+          configurable: true,
+          value: () => '',
+          writable: true,
+        });
+      }
+      if (!hadRevokeObjectURL) {
+        Object.defineProperty(URL, 'revokeObjectURL', {
+          configurable: true,
+          value: () => undefined,
+          writable: true,
+        });
+      }
+      const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockImplementation((object) => {
+        if (object instanceof Blob) {
+          backupBlob = object;
+        }
+        return 'blob:test-debug-url';
+      });
+      const revokeObjectURLSpy = vi
+        .spyOn(URL, 'revokeObjectURL')
+        .mockImplementation(() => undefined);
+      const clickSpy = vi
+        .spyOn(HTMLAnchorElement.prototype, 'click')
+        .mockImplementation(() => undefined);
+      try {
+        const { exportDebugSnapshot, debugExportError } = await loadComposable();
+        await expect(exportDebugSnapshot()).resolves.toBeUndefined();
+        expect(debugExportError.value).toBeNull();
+        expect(backupBlob).toBeInstanceOf(Blob);
+        const debugText = await backupBlob!.text();
+        const debugJson = JSON.parse(debugText) as DebugExportTestJson;
+        expect(debugJson._format).toBe('tarkovtracker-debug-export');
+        expect(debugJson.auth).toEqual(
+          expect.objectContaining({
+            hasAuthSessionHint: true,
+          })
+        );
+        expect(debugJson.runtime).toEqual(
+          expect.objectContaining({
+            path: '/settings',
+            query: '?tab=data',
+            hash: '#debug',
+          })
+        );
+        expect(debugJson.state.tarkov.tarkovUid).toBeNull();
+        expect(debugJson.state.tarkov.pvp.displayName).toBeNull();
+        expect(debugJson.state.preferences.taskUserView).toMatch(/^user:(sha256|fnv1a):/);
+        expect(debugJson.state.preferences.teamHide).toEqual({
+          [Object.keys(debugJson.state.preferences.teamHide)[0]]: true,
+        });
+        expect(Object.keys(debugJson.state.preferences.teamHide)[0]).toMatch(
+          /^user:(sha256|fnv1a):/
+        );
+        expect(debugJson.state.preferences.taskFilterPresets[0]).toEqual(
+          expect.objectContaining({
+            name: 'Preset 1',
+            settings: expect.objectContaining({
+              taskUserView: expect.stringMatching(/^user:(sha256|fnv1a):/),
+            }),
+          })
+        );
+        expect(debugJson.storage.authStorageKeyCount).toBe(1);
+        expect(debugJson.storage.localStorageKeys).not.toContain('sb-localhost-auth-token');
+        expect(typeof debugJson.storage.progress.ownerMatchesCurrentUser).toBe('boolean');
+        expect(debugJson.storage.progress.ownerUserFingerprint).toMatch(/^(sha256|fnv1a):/);
+        expect(debugJson.storage.progressBackups[0].storageKey).toContain('{owner:');
+        expect(debugText).not.toContain('player@example.com');
+        expect(debugText).not.toContain('token-secret');
+        expect(debugText).not.toContain('user-123');
+        expect(debugText).not.toContain('teammate-1');
+        expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:test-debug-url');
+        expect(clickSpy).toHaveBeenCalledOnce();
       } finally {
         createObjectURLSpy.mockRestore();
         revokeObjectURLSpy.mockRestore();
