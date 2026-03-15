@@ -1,3 +1,10 @@
+## [1.26.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.26.0...v1.26.1) (2026-03-15)
+
+
+### Bug Fixes
+
+* refine data backup handling and settings ui ([2a669f1](https://github.com/tarkovtracker-org/TarkovTracker/commit/2a669f1018fe7a019c6bb1726eba8bc98fb3262d))
+
 # [1.26.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.25.6...v1.26.0) (2026-03-14)
 
 
