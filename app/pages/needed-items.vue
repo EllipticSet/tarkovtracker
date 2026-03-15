@@ -4,7 +4,7 @@
       class="px-3 py-6 transition-[padding] duration-200 sm:px-6"
       :class="{ 'lg:pr-80': isSettingsDrawerOpen }"
     >
-      <div class="mx-auto max-w-350">
+      <div class="mx-auto max-w-87.5">
         <NeededItemsFilterBar
           v-model="activeFilter"
           v-model:search="search"

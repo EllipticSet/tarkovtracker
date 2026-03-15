@@ -463,13 +463,7 @@ export function useNeededItems(options: UseNeededItemsOptions = {}): UseNeededIt
   const passesCollectedFilter = (
     item: NeededItemTaskObjective | NeededItemHideoutModule
   ): boolean => {
-    if (!hideCollected.value) return true;
-    const count = item.count ?? 1;
-    const currentCount =
-      item.needType === 'taskObjective'
-        ? tarkovStore.getObjectiveCount(item.id)
-        : tarkovStore.getHideoutPartCount(item.id);
-    return (currentCount ?? 0) < count;
+    return !hideCollected.value || passesOwnershipFilter(item);
   };
   const passesTeamToggleFilter = (
     item: NeededItemTaskObjective | NeededItemHideoutModule

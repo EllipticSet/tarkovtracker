@@ -712,7 +712,7 @@
         non_fir: 'NON-TER',
         show_owned: 'AFFICHER POSSÉDÉS',
         hide_owned: 'MASQUER POSSÉDÉS',
-        hide_collected: 'HIDE COLLECTED',
+        hide_collected: 'MASQUER COLLECTÉS',
         hide_non_fir_special_equipment_title: 'Masquer le matériel spécial non‑TER (par ex. marqueurs MS2000, caméras Wi‑Fi)',
         no_special: 'NON SPÉCIAL',
         special: 'SPÉCIAL',
