@@ -159,7 +159,8 @@ describe('usePreferencesStore', () => {
     it('serializes reactive store state without throwing', () => {
       const store = usePreferencesStore();
       store.localeOverride = 'de';
-      store.saving.streamerMode = true;
+      expect(store.saving).toBeDefined();
+      store.saving!.streamerMode = true;
       let persistedState: ReturnType<typeof getPersistedPreferencesState> | null = null;
       expect(() => {
         persistedState = getPersistedPreferencesState(store.$state);

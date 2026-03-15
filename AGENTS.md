@@ -43,6 +43,7 @@
 - `npm run lint` runs ESLint on `app/` with zero warnings.
 - `npm run lint:fix` auto-fixes lint issues in `app/`.
 - `npm run format` runs Prettier then ESLint fixes.
+- `npm run typecheck` runs Nuxt/Vue TypeScript checking.
 - Prettier targets `app/**/*.{js,ts,tsx,vue,json,json5,css,md}`.
 - Prettier also formats `docs/**/*.{md,markdown}` and top-level configs.
 - Formatting uses `prettier-plugin-tailwindcss` for class sorting.
@@ -178,6 +179,7 @@
 - **Be concise**. Direct responses only: "Fixed X by changing Y to Z." Minimize explanation unless asked. Use file references for context.
 - **No comments** unless explicitly requested. Comments are token overhead.
 - **Run `npm run format` once** before leaving code. It handles both formatting and linting. Only show errors, skip success output.
+- **Run `npm run typecheck` during review/fix loops and whenever TypeScript-affecting files change.** `npm run format` does not run type checking; fix reported TS errors as part of the loop unless they are clearly unrelated blockers.
 - **Own all issues**. Fix formatting, linting, and pre-existing bugs without being asked. Don't deflect with "these are from earlier changes."
 - **Find root cause**. When fixing issues, identify and address the root cause, not just the symptoms.
 - **Self-assess code**. Don't ask "what does this do?" Read and understand it. Only clarify ambiguous intent ("Is this supposed to do X or Y?").
