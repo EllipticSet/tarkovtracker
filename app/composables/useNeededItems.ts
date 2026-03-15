@@ -53,7 +53,6 @@ export interface UseNeededItemsReturn {
   hideTeamItems: WritableComputedRef<boolean>;
   kappaOnly: WritableComputedRef<boolean>;
   hideOwned: WritableComputedRef<boolean>;
-  hideCollected: WritableComputedRef<boolean>;
   sortBy: WritableComputedRef<NeededItemsSortBy>;
   sortDirection: WritableComputedRef<NeededItemsSortDirection>;
   viewMode: WritableComputedRef<NeededItemsViewMode>;
@@ -134,10 +133,6 @@ export function useNeededItems(options: UseNeededItemsOptions = {}): UseNeededIt
   const hideOwned = computed({
     get: () => preferencesStore.getNeededItemsHideOwned,
     set: (value) => preferencesStore.setNeededItemsHideOwned(value),
-  });
-  const hideCollected = computed({
-    get: () => preferencesStore.getNeededItemsHideCollected,
-    set: (value) => preferencesStore.setNeededItemsHideCollected(value),
   });
   const cardStyle = computed({
     get: () => preferencesStore.getNeededItemsCardStyle as NeededItemsCardStyle,
@@ -460,11 +455,6 @@ export function useNeededItems(options: UseNeededItemsOptions = {}): UseNeededIt
   ): boolean => {
     return !hideOwned.value || passesOwnershipFilter(item);
   };
-  const passesCollectedFilter = (
-    item: NeededItemTaskObjective | NeededItemHideoutModule
-  ): boolean => {
-    return !hideCollected.value || passesOwnershipFilter(item);
-  };
   const passesTeamToggleFilter = (
     item: NeededItemTaskObjective | NeededItemHideoutModule
   ): boolean => {
@@ -514,7 +504,6 @@ export function useNeededItems(options: UseNeededItemsOptions = {}): UseNeededIt
       .filter(passesSpecialEquipmentFilter)
       .filter(passesKappaToggleFilter)
       .filter(passesOwnershipToggleFilter)
-      .filter(passesCollectedFilter)
       .filter(passesTeamToggleFilter)
       .filter(passesSearchFilter);
     const sorted = sortNeededItems(result);
@@ -654,7 +643,6 @@ export function useNeededItems(options: UseNeededItemsOptions = {}): UseNeededIt
     hideTeamItems,
     kappaOnly,
     hideOwned,
-    hideCollected,
     sortBy,
     sortDirection,
     viewMode,

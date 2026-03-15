@@ -81,7 +81,6 @@ export interface PreferencesState {
   neededItemsSortBy: 'priority' | 'name' | 'category' | 'count' | null;
   neededItemsSortDirection: 'asc' | 'desc' | null;
   neededItemsHideOwned: boolean;
-  neededItemsHideCollected: boolean;
   neededItemsCardStyle: 'compact' | 'expanded' | null;
   itemsHideNonFIR: boolean;
   hideGlobalTasks: boolean;
@@ -162,7 +161,6 @@ export const preferencesDefaultState: PreferencesState = {
   neededItemsSortBy: 'priority',
   neededItemsSortDirection: 'desc',
   neededItemsHideOwned: false,
-  neededItemsHideCollected: false,
   neededItemsCardStyle: 'expanded',
   itemsHideNonFIR: false,
   hideGlobalTasks: false,
@@ -246,6 +244,17 @@ const sanitizePersistedPreferencesState = (
   const sanitizedState = clonePreferencesSnapshot(
     persistedState
   ) as PersistedPreferencesStateWithLegacy;
+  const legacyHideCollected = (sanitizedState as Record<string, unknown>)
+    .neededItemsHideCollected as boolean | undefined;
+  if (
+    typeof sanitizedState.neededItemsHideOwned !== 'boolean' &&
+    typeof legacyHideCollected === 'boolean'
+  ) {
+    sanitizedState.neededItemsHideOwned = legacyHideCollected;
+  }
+  if ('neededItemsHideCollected' in sanitizedState) {
+    delete (sanitizedState as Record<string, unknown>).neededItemsHideCollected;
+  }
   if (
     typeof sanitizedState.onlyTasksWithRequiredKeys !== 'boolean' &&
     typeof sanitizedState.onlyTasksWithSuggestedKeys === 'boolean'
@@ -492,9 +501,6 @@ export const usePreferencesStore = defineStore('preferences', {
     getNeededItemsHideOwned: (state) => {
       return state.neededItemsHideOwned ?? false;
     },
-    getNeededItemsHideCollected: (state) => {
-      return state.neededItemsHideCollected ?? false;
-    },
     getNeededItemsCardStyle: (state) => {
       return state.neededItemsCardStyle ?? 'expanded';
     },
@@ -733,9 +739,6 @@ export const usePreferencesStore = defineStore('preferences', {
     setNeededItemsHideOwned(hide: boolean) {
       this.neededItemsHideOwned = hide;
     },
-    setNeededItemsHideCollected(hide: boolean) {
-      this.neededItemsHideCollected = hide;
-    },
     setNeededItemsCardStyle(style: 'compact' | 'expanded') {
       this.neededItemsCardStyle = style;
     },
@@ -942,7 +945,6 @@ export const usePreferencesStore = defineStore('preferences', {
       'neededItemsSortBy',
       'neededItemsSortDirection',
       'neededItemsHideOwned',
-      'neededItemsHideCollected',
       'neededItemsCardStyle',
       'itemsHideNonFIR',
       'hideGlobalTasks',

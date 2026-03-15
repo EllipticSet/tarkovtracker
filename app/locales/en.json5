@@ -712,7 +712,6 @@
         non_fir: 'NON-FIR',
         show_owned: 'SHOW OWNED',
         hide_owned: 'HIDE OWNED',
-        hide_collected: 'HIDE COLLECTED',
         hide_non_fir_special_equipment_title: 'Hide non-FIR special equipment (e.g., MS2000 Markers, Wi-Fi Cameras)',
         no_special: 'NO-SPECIAL',
         special: 'SPECIAL',

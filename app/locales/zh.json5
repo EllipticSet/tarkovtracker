@@ -712,7 +712,6 @@
         non_fir: '非战局拾取',
         show_owned: '显示已拥有',
         hide_owned: '隐藏已拥有',
-        hide_collected: '隐藏已收集',
         hide_non_fir_special_equipment_title: '隐藏非战局拾取特殊装备(如MS2000信标、无线摄像头)',
         no_special: '无特殊装备',
         special: '特殊装备',
@@ -1689,3 +1688,4 @@
     close_button: '关闭',
   },
 }
+

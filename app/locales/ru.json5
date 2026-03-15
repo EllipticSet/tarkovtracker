@@ -712,7 +712,6 @@
         non_fir: 'Не найдено в рейде',
         show_owned: 'ПОКАЗАТЬ В НАЛИЧИИ',
         hide_owned: 'СКРЫТЬ В НАЛИЧИИ',
-        hide_collected: 'СКРЫТЬ СОБРАННЫЕ',
         hide_non_fir_special_equipment_title: 'Скрыть специальное снаряжение без галочки (например, маркеры MS2000, Wi‑Fi камеры)',
         no_special: 'БЕЗ-СПЕЦ',
         special: 'СПЕЦ',
@@ -1689,3 +1688,4 @@
     close_button: 'Закрыть',
   },
 }
+

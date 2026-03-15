@@ -4,7 +4,7 @@
       class="px-3 py-6 transition-[padding] duration-200 sm:px-6"
       :class="{ 'lg:pr-80': isSettingsDrawerOpen }"
     >
-      <div class="mx-auto max-w-87.5">
+      <div class="mx-auto max-w-[1400px]">
         <NeededItemsFilterBar
           v-model="activeFilter"
           v-model:search="search"
@@ -17,7 +17,6 @@
           v-model:sort-by="sortBy"
           v-model:sort-direction="sortDirection"
           v-model:hide-owned="hideOwned"
-          v-model:hide-collected="hideCollected"
           v-model:card-style="cardStyle"
           :filter-tabs="filterTabsWithCounts"
           :total-count="displayItems.length"
@@ -136,7 +135,6 @@
           :active-filter="activeFilter"
           :fir-filter="firFilter"
           :hide-owned="hideOwned"
-          :hide-collected="hideCollected"
           :hide-non-fir-special-equipment="hideNonFirSpecialEquipment"
           :hide-team-items="hideTeamItems"
           :kappa-only="kappaOnly"
@@ -145,7 +143,6 @@
           :card-style="cardStyle"
           @update:fir-filter="firFilter = $event"
           @update:hide-owned="hideOwned = $event"
-          @update:hide-collected="hideCollected = $event"
           @update:hide-non-fir-special-equipment="hideNonFirSpecialEquipment = $event"
           @update:hide-team-items="hideTeamItems = $event"
           @update:kappa-only="kappaOnly = $event"
@@ -236,7 +233,6 @@
     hideTeamItems,
     kappaOnly,
     hideOwned,
-    hideCollected,
     sortBy,
     sortDirection,
     viewMode,
@@ -387,7 +383,6 @@
       sortBy,
       sortDirection,
       hideOwned,
-      hideCollected,
     ],
     () => {
       if (perfDebug.value) {
@@ -397,7 +392,6 @@
           groupByItem: groupByItem.value,
           hideNonFirSpecialEquipment: hideNonFirSpecialEquipment.value,
           hideOwned: hideOwned.value,
-          hideCollected: hideCollected.value,
           hideTeamItems: hideTeamItems.value,
           kappaOnly: kappaOnly.value,
           searchLength: search.value.length,

@@ -712,7 +712,6 @@
         non_fir: 'NICHT-FIR',
         show_owned: 'IM BESITZ ANZEIGEN',
         hide_owned: 'IM BESITZ AUSBLENDEN',
-        hide_collected: 'GESAMMELTE AUSBLENDEN',
         hide_non_fir_special_equipment_title: 'Nicht-FIR Spezialausrüstung ausblenden (z.B. MS2000 Marker, WLAN-Kameras)',
         no_special: 'NORMAL',
         special: 'SPEZIAL',
@@ -1689,3 +1688,4 @@
     close_button: 'Schließen',
   },
 }
+

@@ -712,7 +712,6 @@
         non_fir: 'NO-FIR',
         show_owned: 'MOSTRAR POSEÍDOS',
         hide_owned: 'OCULTAR POSEÍDOS',
-        hide_collected: 'OCULTAR RECOLECTADOS',
         hide_non_fir_special_equipment_title: 'Ocultar equipo especial no-FIR (p. ej., marcadores MS2000, cámaras Wi-Fi)',
         no_special: 'SIN-ESPECIAL',
         special: 'ESPECIAL',
@@ -1689,3 +1688,4 @@
     close_button: 'Cerrar',
   },
 }
+

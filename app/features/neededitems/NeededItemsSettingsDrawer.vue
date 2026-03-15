@@ -70,10 +70,6 @@
           </div>
           <UCheckbox v-model="hideOwned" :label="t('page.needed_items.filters.hide_owned')" />
           <UCheckbox
-            v-model="hideCollected"
-            :label="t('page.needed_items.filters.hide_collected')"
-          />
-          <UCheckbox
             v-model="hideNonFirSpecialEquipment"
             :label="t('page.needed_items.filters.hide_non_fir_special_equipment_title')"
           />
@@ -173,7 +169,6 @@
     activeFilter: FilterType;
     firFilter: FirFilter;
     hideOwned: boolean;
-    hideCollected: boolean;
     hideNonFirSpecialEquipment: boolean;
     hideTeamItems: boolean;
     kappaOnly: boolean;
@@ -187,7 +182,6 @@
   const emit = defineEmits<{
     'update:firFilter': [value: FirFilter];
     'update:hideOwned': [value: boolean];
-    'update:hideCollected': [value: boolean];
     'update:hideNonFirSpecialEquipment': [value: boolean];
     'update:hideTeamItems': [value: boolean];
     'update:kappaOnly': [value: boolean];
@@ -207,10 +201,6 @@
   const hideOwned = computed({
     get: () => props.hideOwned,
     set: (value: boolean) => emit('update:hideOwned', value),
-  });
-  const hideCollected = computed({
-    get: () => props.hideCollected,
-    set: (value: boolean) => emit('update:hideCollected', value),
   });
   const hideNonFirSpecialEquipment = computed({
     get: () => props.hideNonFirSpecialEquipment,

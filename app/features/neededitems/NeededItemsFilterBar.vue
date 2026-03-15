@@ -207,7 +207,6 @@
     sortBy: SortBy;
     sortDirection: SortDirection;
     hideOwned: boolean;
-    hideCollected: boolean;
     cardStyle: CardStyle;
     autoFocus?: boolean;
   }>();
@@ -223,7 +222,6 @@
     'update:sortBy': [value: SortBy];
     'update:sortDirection': [value: SortDirection];
     'update:hideOwned': [value: boolean];
-    'update:hideCollected': [value: boolean];
     'update:cardStyle': [value: CardStyle];
   }>();
   const { t } = useI18n({ useScope: 'global' });
@@ -272,9 +270,6 @@
       count += 1;
     }
     if (props.hideOwned) {
-      count += 1;
-    }
-    if (props.hideCollected) {
       count += 1;
     }
     return count;
