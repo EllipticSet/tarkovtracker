@@ -13,6 +13,7 @@ import {
 import { STORAGE_KEYS } from '@/utils/storageKeys';
 import { MAP_MARKER_COLORS } from '@/utils/theme-colors';
 import { serializeUserScopedStorage } from '@/utils/userScopedStorage';
+import type { NeededItemsFilterType } from '@/features/neededitems/neededitems-constants';
 const { currentUserId } = vi.hoisted(() => ({
   currentUserId: {
     value: null as string | null,
@@ -171,6 +172,25 @@ describe('usePreferencesStore', () => {
         })
       );
       expect(persistedState).not.toHaveProperty('saving');
+    });
+    it('drops non-serializable route state during persistence snapshots', () => {
+      let persistedState: ReturnType<typeof getPersistedPreferencesState> | null = null;
+      expect(() => {
+        persistedState = getPersistedPreferencesState({
+          neededItemsSortBy: globalThis.window as unknown as PreferencesState['neededItemsSortBy'],
+          neededItemsViewMode: {
+            value: 'list',
+          } as unknown as PreferencesState['neededItemsViewMode'],
+          taskPrimaryView: 'invalid' as unknown as PreferencesState['taskPrimaryView'],
+          taskUserView: globalThis.window as unknown as PreferencesState['taskUserView'],
+        });
+      }).not.toThrow();
+      expect(persistedState).toMatchObject({
+        neededItemsViewMode: 'list',
+        taskPrimaryView: null,
+      });
+      expect(persistedState).not.toHaveProperty('neededItemsSortBy');
+      expect(persistedState).not.toHaveProperty('taskUserView');
     });
     it('should migrate onlyTasksWithSuggestedKeys to onlyTasksWithRequiredKeys', () => {
       const persistedState = {
@@ -929,6 +949,15 @@ describe('usePreferencesStore', () => {
       store.setTaskUserView('all');
       expect(store.taskUserView).toBe('all');
     });
+    it('normalizes invalid task route values before storing them', () => {
+      const store = usePreferencesStore();
+      store.setTaskPrimaryView('invalid');
+      store.setTaskMapView(globalThis.window as unknown as string);
+      store.setTaskUserView(globalThis.window as unknown as string);
+      expect(store.taskPrimaryView).toBe('all');
+      expect(store.taskMapView).toBe('all');
+      expect(store.taskUserView).toBe('self');
+    });
     it('should set task sort mode with normalization', () => {
       const store = usePreferencesStore();
       store.setTaskSortMode('impact');
@@ -980,6 +1009,17 @@ describe('usePreferencesStore', () => {
       const store = usePreferencesStore();
       store.setNeededItemsSortBy('name');
       expect(store.neededItemsSortBy).toBe('name');
+    });
+    it('normalizes needed-items route values before storing them', () => {
+      const store = usePreferencesStore();
+      store.setNeededTypeView({ value: 'hideout' } as unknown as NeededItemsFilterType);
+      store.setNeededItemsSortBy({ value: 'count' } as unknown as 'priority');
+      store.setNeededItemsSortDirection('invalid' as unknown as 'asc');
+      store.setNeededItemsCardStyle('invalid' as unknown as 'compact');
+      expect(store.neededTypeView).toBe('hideout');
+      expect(store.neededItemsSortBy).toBe('count');
+      expect(store.neededItemsSortDirection).toBe('desc');
+      expect(store.neededItemsCardStyle).toBe('expanded');
     });
     it('should set needed items sort direction', () => {
       const store = usePreferencesStore();

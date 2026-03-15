@@ -19,15 +19,15 @@
     >
       <!-- 1) Identity + Header (Padded) -->
       <div
-        class="hover:bg-surface-700/20 flex flex-col"
+        class="flex flex-col"
         :class="[
           compactClasses.header,
           onMapView
-            ? 'focus-visible:ring-primary-500/40 focus-visible:ring-offset-surface-900 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2'
+            ? 'hover:bg-surface-700/20 focus-visible:ring-primary-500/40 focus-visible:ring-offset-surface-900 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2'
             : '',
         ]"
-        :aria-expanded="taskExpanded"
-        :aria-controls="`task-content-${task.id}`"
+        :aria-expanded="onMapView ? taskExpanded : undefined"
+        :aria-controls="onMapView ? `task-content-${task.id}` : undefined"
         :role="onMapView ? 'button' : undefined"
         :tabindex="onMapView ? 0 : undefined"
         @click="onTaskHeaderClick"

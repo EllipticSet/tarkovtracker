@@ -173,6 +173,16 @@
 - Respect existing lint warnings; do not introduce new ones.
 - Keep commits small and scoped when asked to commit.
 
+## Analytics Access
+
+- Prefer structured analytics access over dashboard scraping.
+- Use GA4 MCP or BigQuery for quantitative product analysis, events, funnels, trends, and segmentation.
+- Use Clarity MCP for recordings, heatmaps, rage clicks, dead clicks, quick backs, and session-level UX debugging.
+- Use Cloudflare GraphQL MCP for traffic anomalies, caching, latency, bot/security noise, and edge/network diagnostics.
+- When investigating user issues, correlate findings across GA4, Clarity, and Cloudflare when possible.
+- Always state the date range, property/project/zone, and source used in analytics conclusions.
+- Use browser-based dashboard inspection only as a fallback when MCP/API access is missing or insufficient.
+
 ## Agent Rules
 
 - **No over-thinking in responses**. Sacrifice explanatory language for brevity—layman's terms only when necessary.

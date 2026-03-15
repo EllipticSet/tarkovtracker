@@ -51,7 +51,7 @@
     }, '');
   };
   const defaultUi = {
-    base: 'bg-surface-900 border border-surface-700 rounded-md px-3 py-2 cursor-pointer ring-0 outline-none',
+    base: 'bg-surface-900 border border-surface-700 rounded-md px-3 py-2 ring-0 outline-none',
     leading: 'shrink-0 text-surface-300',
     trailing: 'shrink-0 text-surface-400',
     value: 'text-surface-100',
