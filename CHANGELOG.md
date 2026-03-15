@@ -1,3 +1,10 @@
+# [1.27.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.26.1...v1.27.0) (2026-03-15)
+
+
+### Features
+
+* add analytics tracking and automatic level sync ([7d83971](https://github.com/tarkovtracker-org/TarkovTracker/commit/7d839710e44b54974c0fb8158e230b3cba08e514))
+
 ## [1.26.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.26.0...v1.26.1) (2026-03-15)
 
 
