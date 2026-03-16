@@ -235,12 +235,15 @@ const initialSavingState = {
 };
 export type PersistedPreferencesState = Partial<Omit<PreferencesState, 'saving'>>;
 type PersistedPreferencesStateWithLegacy = PersistedPreferencesState & {
+  neededItemsHideCollected?: boolean;
   onlyTasksWithSuggestedKeys?: boolean;
 };
-const hasLegacyOnlyTasksWithSuggestedKeys = (
+const requiresLegacyPreferencesMigration = (
   persistedState: PersistedPreferencesStateWithLegacy
 ): boolean => {
-  return 'onlyTasksWithSuggestedKeys' in persistedState;
+  return (
+    'neededItemsHideCollected' in persistedState || 'onlyTasksWithSuggestedKeys' in persistedState
+  );
 };
 const isPlainObject = (value: unknown): value is Record<string, unknown> => {
   if (!value || typeof value !== 'object') {
@@ -381,6 +384,16 @@ const sanitizePersistedPreferencesState = (
   const sanitizedState = clonePreferencesSnapshot(
     persistedState
   ) as PersistedPreferencesStateWithLegacy;
+  const legacyHideCollected = sanitizedState.neededItemsHideCollected;
+  if (
+    typeof sanitizedState.neededItemsHideOwned !== 'boolean' &&
+    typeof legacyHideCollected === 'boolean'
+  ) {
+    sanitizedState.neededItemsHideOwned = legacyHideCollected;
+  }
+  if ('neededItemsHideCollected' in sanitizedState) {
+    delete sanitizedState.neededItemsHideCollected;
+  }
   if (
     typeof sanitizedState.onlyTasksWithRequiredKeys !== 'boolean' &&
     typeof sanitizedState.onlyTasksWithSuggestedKeys === 'boolean'
@@ -516,12 +529,11 @@ export const readPersistedPreferencesSnapshot = (
     if (wrapped._userId !== userId || !isPersistedPreferencesStateRecord(wrapped.data)) {
       return null;
     }
-    const requiresStorageMigration = hasLegacyOnlyTasksWithSuggestedKeys(
-      wrapped.data as PersistedPreferencesStateWithLegacy
-    );
+    const persistedStateWithLegacy = wrapped.data as PersistedPreferencesStateWithLegacy;
+    const requiresStorageMigration = requiresLegacyPreferencesMigration(persistedStateWithLegacy);
     return {
       ownerUserId: wrapped._userId,
-      state: sanitizePersistedPreferencesState(wrapped.data as PersistedPreferencesStateWithLegacy),
+      state: sanitizePersistedPreferencesState(persistedStateWithLegacy),
       requiresStorageMigration: requiresStorageMigration || undefined,
     };
   }

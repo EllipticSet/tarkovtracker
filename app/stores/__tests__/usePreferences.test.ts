@@ -219,6 +219,56 @@ describe('usePreferencesStore', () => {
       const store = usePreferencesStore();
       expect(store.onlyTasksWithRequiredKeys).toBe(false);
     });
+    it('should migrate neededItemsHideCollected to neededItemsHideOwned', () => {
+      const persistedState = {
+        neededItemsHideCollected: true,
+      };
+      localStorageMock.getItem.mockReturnValue(JSON.stringify(persistedState));
+      const newPinia = createPinia();
+      setActivePinia(newPinia);
+      const store = usePreferencesStore();
+      const migratedValue = localStorageMock.setItem.mock.calls
+        .filter(([key]) => key === STORAGE_KEYS.preferences)
+        .map(([, value]) => JSON.parse(value))
+        .at(-1);
+      expect(store.neededItemsHideOwned).toBe(true);
+      expect(migratedValue?.data?.neededItemsHideOwned).toBe(true);
+      expect(migratedValue?.data?.neededItemsHideCollected).toBeUndefined();
+    });
+    it('should not override neededItemsHideOwned if both keys exist', () => {
+      const persistedState = {
+        neededItemsHideCollected: true,
+        neededItemsHideOwned: false,
+      };
+      localStorageMock.getItem.mockReturnValue(JSON.stringify(persistedState));
+      const newPinia = createPinia();
+      setActivePinia(newPinia);
+      const store = usePreferencesStore();
+      expect(store.neededItemsHideOwned).toBe(false);
+    });
+    it('persists scoped migration for neededItemsHideCollected', () => {
+      localStorageMock.setItem(
+        STORAGE_KEYS.preferences,
+        serializeUserScopedStorage(
+          {
+            neededItemsHideCollected: true,
+          },
+          'user-1',
+          1234
+        )
+      );
+      currentUserId.value = 'user-1';
+      const store = usePreferencesStore();
+      const migratedValue = JSON.parse(localStorageMock.getItem(STORAGE_KEYS.preferences) || '{}');
+      expect(store.neededItemsHideOwned).toBe(true);
+      expect(migratedValue).toMatchObject({
+        _userId: 'user-1',
+        data: {
+          neededItemsHideOwned: true,
+        },
+      });
+      expect(migratedValue.data.neededItemsHideCollected).toBeUndefined();
+    });
     it('should migrate untouched legacy map marker defaults', () => {
       const legacyMapMarkerColors = {
         ...MAP_MARKER_COLORS,
@@ -368,6 +418,35 @@ describe('usePreferencesStore', () => {
         },
       });
       expect(restoredSnapshot.data.onlyTasksWithSuggestedKeys).toBeUndefined();
+    });
+    it('rewrites preserved logout storage without the legacy needed items key', () => {
+      localStorageMock.setItem(
+        STORAGE_KEYS.preferences,
+        serializeUserScopedStorage(
+          {
+            localeOverride: 'de',
+            neededItemsHideCollected: true,
+          },
+          'user-1',
+          1234
+        )
+      );
+      currentUserId.value = 'user-1';
+      usePreferencesStore();
+      currentUserId.value = null;
+      resetPreferencesStoreForSessionTransition('user-1');
+      const restoredSnapshot = JSON.parse(
+        localStorageMock.getItem(STORAGE_KEYS.preferences) || '{}'
+      );
+      expect(restoredSnapshot._timestamp).toEqual(expect.any(Number));
+      expect(restoredSnapshot).toMatchObject({
+        _userId: 'user-1',
+        data: {
+          localeOverride: 'de',
+          neededItemsHideOwned: true,
+        },
+      });
+      expect(restoredSnapshot.data.neededItemsHideCollected).toBeUndefined();
     });
     it('clears prior scoped storage during an account switch', () => {
       const persistedState = {

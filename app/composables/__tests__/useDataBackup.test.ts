@@ -355,7 +355,7 @@ describe('useDataBackup', () => {
           pmcFaction: 'USEC',
           displayName: 'ProxyPlayer',
           xpOffset: 0,
-          taskCompletions: {},
+          taskCompletions: { task1: { complete: true, timestamp: 1000 } },
           taskObjectives: {},
           hideoutParts: {},
           hideoutModules: {},
@@ -534,6 +534,7 @@ describe('useDataBackup', () => {
         }
         expect(typeof progressSnapshot.ownerMatchesCurrentUser).toBe('boolean');
         expect(progressSnapshot.ownerUserFingerprint).toMatch(/^(sha256|fnv1a):/);
+        expect(debugJson.storage.progressBackups).toHaveLength(1);
         expect(debugJson.storage.progressBackups[0]).toBeDefined();
         expect(debugJson.storage.progressBackups[0]!.storageKey).toContain('{owner:');
         expect(debugText).not.toContain('player@example.com');
