@@ -34,6 +34,7 @@
           color="neutral"
           size="sm"
           class="leading-none"
+          :disabled="primaryView === 'all'"
           :aria-label="t('page.tasks.primary_views.all')"
           :aria-pressed="primaryView === 'all'"
           :class="primaryView === 'all' ? 'bg-white/10 text-white' : 'text-surface-200'"
@@ -49,6 +50,7 @@
           color="neutral"
           size="sm"
           class="leading-none"
+          :disabled="primaryView === 'traders'"
           :aria-label="t('page.tasks.primary_views.traders')"
           :aria-pressed="primaryView === 'traders'"
           :class="primaryView === 'traders' ? 'bg-white/10 text-white' : 'text-surface-200'"
@@ -64,6 +66,7 @@
           color="neutral"
           size="sm"
           class="leading-none"
+          :disabled="primaryView === 'maps'"
           :aria-label="t('page.tasks.primary_views.maps')"
           :aria-pressed="primaryView === 'maps'"
           :class="primaryView === 'maps' ? 'bg-white/10 text-white' : 'text-surface-200'"
@@ -79,6 +82,7 @@
           color="neutral"
           size="sm"
           class="hidden leading-none lg:inline-flex"
+          :disabled="primaryView === 'graph'"
           :aria-label="t('page.tasks.primary_views.graph')"
           :aria-pressed="primaryView === 'graph'"
           :class="primaryView === 'graph' ? 'bg-white/10 text-white' : 'text-surface-200'"
@@ -142,6 +146,7 @@
             color="neutral"
             size="sm"
             class="leading-none"
+            :disabled="secondaryView === 'all'"
             :aria-pressed="secondaryView === 'all'"
             :class="secondaryView === 'all' ? 'bg-white/10 text-white' : 'text-surface-400'"
             @click="setSecondaryView('all')"
@@ -171,6 +176,7 @@
             color="neutral"
             size="sm"
             class="leading-none"
+            :disabled="secondaryView === 'available'"
             :aria-pressed="secondaryView === 'available'"
             :class="secondaryView === 'available' ? 'bg-white/10 text-white' : 'text-surface-400'"
             @click="setSecondaryView('available')"
@@ -192,6 +198,7 @@
             color="neutral"
             size="sm"
             class="leading-none"
+            :disabled="secondaryView === 'locked'"
             :aria-pressed="secondaryView === 'locked'"
             :class="secondaryView === 'locked' ? 'bg-white/10 text-white' : 'text-surface-400'"
             @click="setSecondaryView('locked')"
@@ -208,13 +215,12 @@
             </span>
           </UButton>
           <UButton
-            v-if="
-              !isGraphView && preferencesStore.getShowCompletedFilter && statusCounts.completed > 0
-            "
+            v-if="showCompletedFilterButton"
             variant="ghost"
             color="neutral"
             size="sm"
             class="leading-none"
+            :disabled="secondaryView === 'completed'"
             :aria-pressed="secondaryView === 'completed'"
             :class="secondaryView === 'completed' ? 'bg-white/10 text-white' : 'text-surface-400'"
             @click="setSecondaryView('completed')"
@@ -230,11 +236,12 @@
             </span>
           </UButton>
           <UButton
-            v-if="!isGraphView && preferencesStore.getShowFailedFilter && statusCounts.failed > 0"
+            v-if="showFailedFilterButton"
             variant="ghost"
             color="neutral"
             size="sm"
             class="leading-none"
+            :disabled="secondaryView === 'failed'"
             :aria-pressed="secondaryView === 'failed'"
             :class="secondaryView === 'failed' ? 'bg-white/10 text-white' : 'text-surface-400'"
             @click="setSecondaryView('failed')"
@@ -257,6 +264,7 @@
             color="neutral"
             size="sm"
             class="leading-none"
+            :disabled="preferencesStore.getTaskUserView === 'self'"
             :aria-pressed="preferencesStore.getTaskUserView === 'self'"
             :class="
               preferencesStore.getTaskUserView === 'self'
@@ -279,6 +287,7 @@
               color="neutral"
               size="sm"
               class="leading-none"
+              :disabled="preferencesStore.getTaskUserView === teamId"
               :aria-pressed="preferencesStore.getTaskUserView === teamId"
               :class="[
                 preferencesStore.getTaskUserView === teamId
@@ -310,6 +319,7 @@
             color="neutral"
             size="sm"
             class="leading-none"
+            :disabled="preferencesStore.getTaskUserView === 'all'"
             :aria-pressed="preferencesStore.getTaskUserView === 'all'"
             :class="
               preferencesStore.getTaskUserView === 'all'
@@ -339,6 +349,7 @@
             variant="ghost"
             color="neutral"
             size="sm"
+            :disabled="preferencesStore.getTaskMapView === mapOption.value"
             :aria-pressed="preferencesStore.getTaskMapView === mapOption.value"
             :class="[
               'gap-1.5 transition-colors',
@@ -375,6 +386,7 @@
             variant="ghost"
             color="neutral"
             size="sm"
+            :disabled="preferencesStore.getTaskTraderView === trader.id"
             :aria-pressed="preferencesStore.getTaskTraderView === trader.id"
             :class="[
               'gap-2 transition-colors',
@@ -482,6 +494,12 @@
   const showAllStatusButton = computed(
     () => isGraphView.value || preferencesStore.getShowAllFilter
   );
+  const showCompletedFilterButton = computed(() => {
+    return !isGraphView.value && preferencesStore.getShowCompletedFilter;
+  });
+  const showFailedFilterButton = computed(() => {
+    return !isGraphView.value && preferencesStore.getShowFailedFilter;
+  });
   // Helper to get teammate display name
   const getTeammateDisplayName = (teamId: string): string => {
     return progressStore.getDisplayName(teamId);
@@ -600,6 +618,7 @@
     }
   };
   const setPrimaryView = (view: string) => {
+    if (preferencesStore.getTaskPrimaryView === view) return;
     preferencesStore.setTaskPrimaryView(view);
     // When switching to maps, ensure a map is selected
     if (view === 'maps' && maps.value.length > 0 && preferencesStore.getTaskMapView === 'all') {
@@ -615,6 +634,7 @@
   // Secondary view (available / locked / completed)
   const setSecondaryView = (view: string) => {
     const normalizedView = getTaskSecondaryViewForPrimaryView(primaryView.value, view);
+    if (preferencesStore.getTaskSecondaryView === normalizedView) return;
     preferencesStore.setTaskSecondaryView(normalizedView);
   };
   // Map selection
@@ -627,13 +647,13 @@
     }));
   });
   const onMapSelect = (selected: { label: string; value: string }) => {
-    if (selected?.value) {
+    if (selected?.value && preferencesStore.getTaskMapView !== selected.value) {
       preferencesStore.setTaskMapView(selected.value);
     }
   };
   // Trader selection
   const onTraderSelect = (selected: { label: string; value: string }) => {
-    if (selected?.value) {
+    if (selected?.value && preferencesStore.getTaskTraderView !== selected.value) {
       preferencesStore.setTaskTraderView(selected.value);
     }
   };
@@ -641,6 +661,7 @@
   const onUserViewSelect = (selected: { label: string; value: string }) => {
     if (selected?.value) {
       const selectedUserView = selected.value;
+      if (preferencesStore.getTaskUserView === selectedUserView) return;
       if (
         selectedUserView !== 'self' &&
         selectedUserView !== 'all' &&

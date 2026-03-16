@@ -1,17 +1,14 @@
 <template>
-  <div
+  <button
+    type="button"
     :class="[
       'bg-surface-900 cursor-pointer rounded-lg border border-white/12 px-4 py-3 shadow-md',
       'transition-all duration-150',
       'focus-visible:ring-surface-700/50 outline-none hover:shadow-lg focus-visible:ring-2',
       hoverBorderClass,
     ]"
-    role="button"
-    tabindex="0"
     :aria-label="buttonAriaLabel"
     @click="$emit('click')"
-    @keydown.enter="$emit('click')"
-    @keydown.space.prevent="$emit('click')"
   >
     <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex items-center gap-3">
@@ -31,7 +28,7 @@
       <div class="text-3xl font-bold" :class="percentageColorClass">{{ percentageDisplay }}%</div>
     </div>
     <DashboardProgressBar :percentage="percentage" :color="color" :aria-label="progressAriaLabel" />
-  </div>
+  </button>
 </template>
 <script setup lang="ts">
   import { useI18n } from 'vue-i18n';

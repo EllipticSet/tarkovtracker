@@ -24,16 +24,25 @@
       </span>
       <!-- Right: Status Icons & Settings -->
       <div class="ml-auto flex items-center gap-1 sm:gap-2">
-        <AppTooltip v-if="dataError" :text="t('app_bar.error_loading')">
-          <span class="inline-flex rounded">
-            <UIcon name="i-mdi-database-alert" class="text-error-500 h-5 w-5" />
+        <div class="flex min-w-[3.5rem] items-center justify-end gap-1 sm:min-w-[4rem] sm:gap-2">
+          <span class="flex h-7 w-7 items-center justify-center">
+            <AppTooltip v-if="dataError" :text="t('app_bar.error_loading')">
+              <span class="inline-flex rounded">
+                <UIcon name="i-mdi-database-alert" class="text-error-500 h-5 w-5" />
+              </span>
+            </AppTooltip>
           </span>
-        </AppTooltip>
-        <AppTooltip v-if="dataLoading || hideoutLoading" :text="t('app_bar.loading')">
-          <span class="inline-flex rounded">
-            <UIcon name="i-heroicons-arrow-path" class="text-primary-500 h-5 w-5 animate-spin" />
+          <span class="flex h-7 w-7 items-center justify-center">
+            <AppTooltip v-if="dataLoading || hideoutLoading" :text="t('app_bar.loading')">
+              <span class="inline-flex rounded">
+                <UIcon
+                  name="i-heroicons-arrow-path"
+                  class="text-primary-500 h-5 w-5 animate-spin"
+                />
+              </span>
+            </AppTooltip>
           </span>
-        </AppTooltip>
+        </div>
         <!-- Community Links -->
         <AppTooltip :text="t('footer.call_to_action.discord')">
           <a
@@ -80,55 +89,60 @@
           </select>
         </label>
         <!-- Account section -->
-        <template v-if="isLoggedIn">
-          <div class="bg-surface-700/50 mx-1 h-5 w-px" />
-          <UDropdownMenu :items="accountMenuItems" :content="{ align: 'end', sideOffset: 8 }">
-            <button
-              type="button"
-              class="bg-surface-800/50 border-surface-600 hover:bg-surface-800 flex min-h-8 items-center gap-2 rounded-md border px-2.5 py-1.5 transition-colors"
-              :aria-label="t('navigation_drawer.account_menu')"
-            >
-              <img
-                :src="avatarSrc"
-                :alt="t('app_bar.user_avatar_alt')"
-                class="h-4 w-4 shrink-0 rounded-full"
-                loading="lazy"
-              />
-              <span class="text-surface-200 hidden text-sm leading-none font-medium sm:inline">
-                {{ userDisplayName }}
-              </span>
-              <UIcon name="i-mdi-chevron-down" class="text-surface-400 h-3.5 w-3.5 shrink-0" />
-            </button>
-          </UDropdownMenu>
-        </template>
-        <template v-else>
-          <div class="bg-surface-700/50 mx-1 h-5 w-px" />
-          <AppTooltip :text="t('navigation_drawer.settings')">
-            <NuxtLink
-              to="/settings"
-              class="hover:bg-surface-700 flex h-7 w-7 items-center justify-center rounded transition-colors"
-              :aria-label="t('navigation_drawer.settings')"
-            >
-              <UIcon
-                name="i-mdi-cog-outline"
-                class="text-surface-300 h-4.5 w-4.5 hover:text-white"
-              />
-            </NuxtLink>
-          </AppTooltip>
-          <NuxtLink
-            to="/login"
-            class="hover:bg-surface-700 hidden min-h-8 items-center rounded px-2 py-1 text-sm leading-none text-white sm:inline-flex"
-          >
-            <span class="leading-none">{{ t('navigation_drawer.login') }}</span>
-          </NuxtLink>
-          <NuxtLink
-            to="/login"
-            class="hover:bg-surface-700 rounded p-1 text-white sm:hidden"
-            :aria-label="t('navigation_drawer.login')"
-          >
-            <UIcon name="i-mdi-fingerprint" class="h-4 w-4" />
-          </NuxtLink>
-        </template>
+        <div class="bg-surface-700/50 mx-1 h-5 w-px" />
+        <div class="flex min-w-[2.75rem] items-center justify-end sm:min-w-[10rem]">
+          <template v-if="isLoggedIn">
+            <UDropdownMenu :items="accountMenuItems" :content="{ align: 'end', sideOffset: 8 }">
+              <button
+                type="button"
+                class="bg-surface-800/50 border-surface-600 hover:bg-surface-800 flex min-h-8 items-center gap-2 rounded-md border px-2.5 py-1.5 transition-colors sm:w-full sm:max-w-40"
+                :aria-label="t('navigation_drawer.account_menu')"
+              >
+                <img
+                  :src="avatarSrc"
+                  :alt="t('app_bar.user_avatar_alt')"
+                  class="h-4 w-4 shrink-0 rounded-full"
+                  loading="lazy"
+                />
+                <span
+                  class="text-surface-200 hidden min-w-0 flex-1 truncate text-sm leading-none font-medium sm:inline"
+                >
+                  {{ userDisplayName }}
+                </span>
+                <UIcon name="i-mdi-chevron-down" class="text-surface-400 h-3.5 w-3.5 shrink-0" />
+              </button>
+            </UDropdownMenu>
+          </template>
+          <template v-else>
+            <div class="flex w-full items-center justify-end gap-1 sm:gap-2">
+              <AppTooltip :text="t('navigation_drawer.settings')">
+                <NuxtLink
+                  to="/settings"
+                  class="hover:bg-surface-700 flex h-7 w-7 items-center justify-center rounded transition-colors"
+                  :aria-label="t('navigation_drawer.settings')"
+                >
+                  <UIcon
+                    name="i-mdi-cog-outline"
+                    class="text-surface-300 h-4.5 w-4.5 hover:text-white"
+                  />
+                </NuxtLink>
+              </AppTooltip>
+              <NuxtLink
+                to="/login"
+                class="hover:bg-surface-700 hidden min-h-8 items-center rounded px-2 py-1 text-sm leading-none text-white sm:inline-flex"
+              >
+                <span class="leading-none">{{ t('navigation_drawer.login') }}</span>
+              </NuxtLink>
+              <NuxtLink
+                to="/login"
+                class="hover:bg-surface-700 rounded p-1 text-white sm:hidden"
+                :aria-label="t('navigation_drawer.login')"
+              >
+                <UIcon name="i-mdi-fingerprint" class="h-4 w-4" />
+              </NuxtLink>
+            </div>
+          </template>
+        </div>
       </div>
     </div>
   </header>
