@@ -398,6 +398,35 @@ describe('usePreferencesStore', () => {
       });
       expect(restoredSnapshot.data.onlyTasksWithSuggestedKeys).toBeUndefined();
     });
+    it('rewrites preserved logout storage without the legacy needed items key', () => {
+      localStorageMock.setItem(
+        STORAGE_KEYS.preferences,
+        serializeUserScopedStorage(
+          {
+            localeOverride: 'de',
+            neededItemsHideCollected: true,
+          },
+          'user-1',
+          1234
+        )
+      );
+      currentUserId.value = 'user-1';
+      usePreferencesStore();
+      currentUserId.value = null;
+      resetPreferencesStoreForSessionTransition('user-1');
+      const restoredSnapshot = JSON.parse(
+        localStorageMock.getItem(STORAGE_KEYS.preferences) || '{}'
+      );
+      expect(restoredSnapshot._timestamp).toEqual(expect.any(Number));
+      expect(restoredSnapshot).toMatchObject({
+        _userId: 'user-1',
+        data: {
+          localeOverride: 'de',
+          neededItemsHideOwned: true,
+        },
+      });
+      expect(restoredSnapshot.data.neededItemsHideCollected).toBeUndefined();
+    });
     it('clears prior scoped storage during an account switch', () => {
       const persistedState = {
         localeOverride: 'de',
