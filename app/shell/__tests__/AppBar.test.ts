@@ -115,6 +115,9 @@ const mountAppBar = async () => {
           template: '<span><slot /></span>',
         },
         DiscordIcon: true,
+        GlobalHelpLauncher: {
+          template: '<div data-testid="global-help-launcher" />',
+        },
         NuxtLink: {
           template: '<a><slot /></a>',
         },

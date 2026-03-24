@@ -1,9 +1,11 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
+import { ref } from 'vue';
 const UButtonStub = {
+  inheritAttrs: false,
   props: ['icon'],
   emits: ['click'],
-  template: '<button :data-icon="icon" @click="$emit(\'click\')"><slot /></button>',
+  template: '<button v-bind="$attrs" :data-icon="icon" @click="$emit(\'click\')"><slot /></button>',
 };
 const UInputStub = {
   props: ['modelValue'],
@@ -145,7 +147,7 @@ const setup = async (options: SetupOptions = {}) => {
   }));
   vi.doMock('@/composables/useTaskSettingsDrawer', () => ({
     useTaskSettingsDrawer: () => ({
-      isOpen: { value: false },
+      isOpen: ref(false),
       open: vi.fn(),
       close: vi.fn(),
       toggle: vi.fn(),
@@ -279,6 +281,27 @@ describe('TaskFilterBar', () => {
     expect(availableButton).toBeTruthy();
     expect(availableButton!.text()).toContain('0');
     expect(availableButton!.text()).not.toContain('1');
+  });
+  it('applies stronger selected styling to the active primary and status views', async () => {
+    const { TaskFilterBar } = await setup({
+      preferencesStore: {
+        getTaskPrimaryView: 'all',
+        getTaskSecondaryView: 'all',
+      },
+    });
+    const wrapper = mountTaskFilterBar(TaskFilterBar);
+    const listButton = wrapper.findAll('button').find((button) => button.text().includes('LIST'));
+    const allStatusButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('ALL2'));
+    const availableButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('AVAILABLE'));
+    expect(listButton?.classes()).toContain('border-primary-500/45');
+    expect(listButton?.classes()).toContain('ring-primary-500/25');
+    expect(allStatusButton?.classes()).toContain('border-primary-500/45');
+    expect(allStatusButton?.classes()).toContain('ring-primary-500/25');
+    expect(availableButton?.classes()).not.toContain('border-info-500/45');
   });
   it('keeps completed and failed filters mounted when enabled, even with zero counts', async () => {
     const { TaskFilterBar } = await setup({

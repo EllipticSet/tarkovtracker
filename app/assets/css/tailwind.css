@@ -779,6 +779,7 @@ summary {
   .fade-leave-active {
     transition-duration: 0ms;
   }
+  .page-help-highlight,
   .objective-highlight {
     animation: none;
   }
@@ -789,6 +790,24 @@ summary {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+.page-help-highlight {
+  animation: page-help-highlight-pulse 1.6s ease-in-out infinite;
+}
+@keyframes page-help-highlight-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(0, 0, 0, 0.5),
+      0 0 0 0 rgba(196, 145, 89, 0.18);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      0 0 0 10px rgba(0, 0, 0, 0.18),
+      0 0 0 1px rgba(196, 145, 89, 0.38);
+    transform: scale(1.01);
   }
 }
 .objective-highlight {

@@ -1,11 +1,23 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ref } from 'vue';
 import HideoutPage from '@/pages/hideout.vue';
 import type { HideoutStation } from '@/types/tarkov';
-const { useInfiniteScrollMock } = vi.hoisted(() => ({
+const { breakpointState, hideoutSettingsDrawerState, useInfiniteScrollMock } = vi.hoisted(() => ({
+  breakpointState: { value: true },
+  hideoutSettingsDrawerState: { value: false },
   useInfiniteScrollMock: vi.fn(() => ({ checkAndLoadMore: vi.fn() })),
 }));
+const UButtonStub = {
+  template: '<button><slot /></button>',
+};
+const HideoutSettingsDrawerStub = {
+  props: ['mode'],
+  template: '<div data-testid="hideout-settings-drawer">{{ mode }}</div>',
+};
+const UPopoverStub = {
+  template: '<div><slot /><slot name="content" /></div>',
+};
 /**
  * Deep freezes an object and all nested objects/arrays to prevent accidental mutation.
  * Uses a WeakSet to protect against circular references.
@@ -49,9 +61,25 @@ vi.mock('@/composables/useHideoutFiltering', () => ({
 vi.mock('@/composables/useInfiniteScroll', () => ({
   useInfiniteScroll: useInfiniteScrollMock,
 }));
+vi.mock('@vueuse/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@vueuse/core')>()),
+  useBreakpoints: () => ({
+    greaterOrEqual: () => breakpointState,
+    smaller: () => ({ value: !breakpointState.value }),
+  }),
+  breakpointsTailwind: {},
+}));
 vi.mock('@/composables/useHideoutStationStatus', () => ({
   useHideoutStationStatus: () => ({
     getStationStatus: () => 'available',
+  }),
+}));
+vi.mock('@/composables/useHideoutSettingsDrawer', () => ({
+  useHideoutSettingsDrawer: () => ({
+    isOpen: hideoutSettingsDrawerState,
+    open: vi.fn(),
+    close: vi.fn(),
+    toggle: vi.fn(),
   }),
 }));
 vi.mock('@/stores/useMetadata', () => ({
@@ -114,6 +142,10 @@ vi.mock('vue-i18n', async (importOriginal) => ({
   }),
 }));
 describe('hideout page', () => {
+  beforeEach(() => {
+    breakpointState.value = true;
+    hideoutSettingsDrawerState.value = false;
+  });
   it('uses ready auto-loading for infinite scroll', async () => {
     useInfiniteScrollMock.mockClear();
     await mountSuspended(HideoutPage, {
@@ -148,7 +180,7 @@ describe('hideout page', () => {
     });
     expect(wrapper.find('[data-testid="hideout-card"]').exists()).toBe(true);
   });
-  it('renders the hideout-specific summary in the page header', async () => {
+  it('does not render a redundant hideout header summary block', async () => {
     const wrapper = await mountSuspended(HideoutPage, {
       global: {
         stubs: {
@@ -162,7 +194,66 @@ describe('hideout page', () => {
         },
       },
     });
-    expect(wrapper.text()).toContain('page.hideout.summary');
-    expect(wrapper.text()).not.toContain('page.needed_items.meta_description');
+    expect(wrapper.text()).not.toContain('page.hideout.summary');
+  });
+  it('keeps page actions separate from the primary view switcher', async () => {
+    const wrapper = await mountSuspended(HideoutPage, {
+      global: {
+        stubs: {
+          UBadge: true,
+          UButton: UButtonStub,
+          UCheckbox: true,
+          HideoutCard: { template: '<div data-testid="hideout-card" />' },
+          RefreshButton: true,
+          UAlert: true,
+          UIcon: true,
+          UModal: true,
+          UPopover: UPopoverStub,
+        },
+      },
+    });
+    expect(wrapper.text()).not.toContain('page.needed_items.title');
+    expect(wrapper.get('[data-testid="hideout-view-switcher"]').text()).toContain(
+      'PAGE.HIDEOUT.PRIMARY_VIEWS.AVAILABLE'
+    );
+    expect(wrapper.get('[data-testid="hideout-filter-actions"]').text()).toContain('SETTINGS');
+  });
+  it('renders the settings drawer as a docked side rail on desktop', async () => {
+    breakpointState.value = true;
+    hideoutSettingsDrawerState.value = true;
+    const wrapper = await mountSuspended(HideoutPage, {
+      global: {
+        stubs: {
+          HideoutSettingsDrawer: HideoutSettingsDrawerStub,
+          HideoutCard: { template: '<div data-testid="hideout-card" />' },
+          RefreshButton: true,
+          UAlert: true,
+          UButton: UButtonStub,
+          UIcon: true,
+          UModal: true,
+          teleport: true,
+        },
+      },
+    });
+    expect(wrapper.get('[data-testid="hideout-settings-drawer"]').text()).toContain('docked');
+  });
+  it('renders the settings drawer as an overlay on mobile', async () => {
+    breakpointState.value = false;
+    hideoutSettingsDrawerState.value = true;
+    const wrapper = await mountSuspended(HideoutPage, {
+      global: {
+        stubs: {
+          HideoutSettingsDrawer: HideoutSettingsDrawerStub,
+          HideoutCard: { template: '<div data-testid="hideout-card" />' },
+          RefreshButton: true,
+          UAlert: true,
+          UButton: UButtonStub,
+          UIcon: true,
+          UModal: true,
+          teleport: true,
+        },
+      },
+    });
+    expect(wrapper.get('[data-testid="hideout-settings-drawer"]').text()).toContain('overlay');
   });
 });

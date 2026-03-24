@@ -43,6 +43,9 @@
             </AppTooltip>
           </span>
         </div>
+        <div class="shrink-0">
+          <GlobalHelpLauncher />
+        </div>
         <!-- Community Links -->
         <AppTooltip :text="t('footer.call_to_action.discord')">
           <a

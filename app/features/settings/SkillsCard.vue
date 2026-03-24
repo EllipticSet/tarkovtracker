@@ -1,180 +1,186 @@
 <template>
-  <GenericCard
-    icon="mdi-brain"
-    icon-color="info"
-    highlight-color="info"
-    :fill-height="false"
-    :title="$t('settings.skills.title')"
-    title-classes="text-lg font-semibold"
-  >
-    <template #title-right>
-      <div class="flex items-center gap-1">
-        <UButton
-          size="xs"
-          :label="$t('settings.skills.sort.priority')"
-          :variant="skillSortMode === 'priority' ? 'solid' : 'outline'"
-          :color="skillSortMode === 'priority' ? 'primary' : 'neutral'"
-          @click="setSkillSortMode('priority')"
-        />
-        <UButton
-          size="xs"
-          :label="$t('settings.skills.sort.ingame')"
-          :variant="skillSortMode === 'ingame' ? 'solid' : 'outline'"
-          :color="skillSortMode === 'ingame' ? 'primary' : 'neutral'"
-          @click="setSkillSortMode('ingame')"
-        />
-      </div>
-    </template>
-    <template #content>
-      <div class="space-y-4 px-4 py-4">
-        <p class="text-surface-400 text-xs">
-          {{
-            $t(
-              'settings.skills.explanation',
-              `Quest rewards are auto-calculated. Enter your total skill level (max ${MAX_SKILL_LEVEL}) to adjust the offset.`
-            )
-          }}
-        </p>
-        <div
-          v-if="allGameSkills.length > 0"
-          class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-        >
-          <div
-            v-for="skill in visibleSkills"
-            :key="skill.key"
-            class="border-surface-700 hover:border-surface-500 rounded-lg border p-3 transition-colors"
-            @click="handleSkillCardClick(skill.key, $event)"
-          >
-            <div class="mb-2 flex items-center gap-2">
-              <div class="group relative shrink-0">
-                <img
-                  v-if="skill.imageLink"
-                  :src="skill.imageLink"
-                  :alt="skill.name"
-                  class="relative z-10 h-10 w-10 rounded object-contain transition-transform duration-200 ease-out group-hover:z-50 group-hover:scale-[2.5] group-hover:rounded-md group-hover:shadow-xl"
-                  loading="lazy"
-                />
-                <div
-                  v-else
-                  class="bg-surface-700 flex h-10 w-10 items-center justify-center rounded text-xs"
-                >
-                  ?
-                </div>
-              </div>
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-1">
-                  <span class="text-surface-100 truncate text-sm font-semibold">
-                    {{ formatSkillName(skill.name) }}
-                  </span>
-                  <UTooltip
-                    v-if="skill.requiredByTasks.length > 0"
-                    :text="$t('skills.required_for', { items: skill.requiredByTasks.join(', ') })"
-                  >
-                    <UBadge color="warning" variant="soft" size="xs">
-                      {{ $t('skills.req') }}
-                    </UBadge>
-                  </UTooltip>
-                  <UTooltip
-                    v-if="skill.requiredLevels.length > 0"
-                    :text="$t('skills.required_levels', { items: skill.requiredLevels.join(', ') })"
-                  >
-                    <UBadge color="accent" variant="soft" size="xs">
-                      {{ $t('skills.lv') }} {{ formatRequiredLevels(skill.requiredLevels) }}
-                    </UBadge>
-                  </UTooltip>
-                </div>
-                <div class="text-surface-400 truncate text-xs">
-                  <span v-if="skill.requiredByTasks.length > 0">
-                    {{ $t('settings.skills.req_count') }} {{ skill.requiredByTasks.length }}
-                  </span>
-                  <span
-                    v-if="skill.requiredByTasks.length > 0 && skill.rewardedByTasks.length > 0"
-                    class="mx-1"
-                  >
-                    •
-                  </span>
-                  <span v-if="skill.rewardedByTasks.length > 0">
-                    {{ $t('settings.skills.reward_count') }}
-                    {{ skill.rewardedByTasks.length }}
-                  </span>
-                </div>
-              </div>
-              <span
-                class="shrink-0 text-lg font-bold"
-                :class="
-                  getSkillLevel(skill.key) >= MAX_SKILL_LEVEL
-                    ? 'text-warning-500'
-                    : 'text-primary-400'
-                "
-              >
-                {{ getDisplayLevel(skill.key) }}
-              </span>
-            </div>
-            <div class="mb-2 flex gap-3 text-xs">
-              <div class="text-surface-400 flex-1">
-                {{ $t('settings.skills.quest') }}
-                <span class="text-surface-200 font-medium">
-                  {{ getQuestSkillLevel(skill.key) }}
-                </span>
-              </div>
-              <div class="text-surface-400 flex-1">
-                {{ $t('settings.skills.offset') }}
-                <span class="text-surface-200 font-medium">{{ getSkillOffset(skill.key) }}</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <label :for="getSkillInputId(skill.key)" class="sr-only">
-                {{ formatSkillName(skill.name) }} {{ $t('settings.skills.level') }}
-              </label>
-              <UInput
-                :id="getSkillInputId(skill.key)"
-                :model-value="getSkillLevel(skill.key)"
-                type="text"
-                inputmode="decimal"
-                :min="0"
-                placeholder="0"
-                size="sm"
-                class="flex-1"
-                :aria-describedby="getSkillRangeId(skill.key)"
-                @keydown="preventInvalidInput"
-                @paste="(event: ClipboardEvent) => onPaste(event, skill.key)"
-                @focus="resetSkillLimitToast"
-                @blur="resetSkillLimitToast"
-                @update:model-value="(value) => updateSkillLevel(skill.key, value)"
-              />
-              <span :id="getSkillRangeId(skill.key)" class="sr-only">
-                {{ $t('settings.skills.valid_range', `Valid range: 0 to ${MAX_SKILL_LEVEL}`) }}
-              </span>
-              <UButton
-                icon="i-mdi-refresh"
-                size="sm"
-                variant="soft"
-                color="neutral"
-                class="min-w-20"
-                :disabled="getSkillOffset(skill.key) === 0"
-                @click="resetOffset(skill.key)"
-              >
-                {{ $t('settings.reset') }}
-              </UButton>
-            </div>
-          </div>
-        </div>
-        <div v-if="hasShowAllToggle" class="flex justify-center pt-2">
+  <div id="settings-skills" class="scroll-mt-16">
+    <GenericCard
+      icon="mdi-brain"
+      icon-color="info"
+      highlight-color="info"
+      :fill-height="false"
+      :title="$t('settings.skills.title')"
+      title-classes="text-lg font-semibold"
+    >
+      <template #title-right>
+        <div class="flex items-center gap-1">
           <UButton
-            :label="
-              showAllSkills ? $t('settings.skills.show_less') : $t('settings.skills.show_all')
-            "
-            variant="soft"
-            color="neutral"
-            @click="showAllSkills = !showAllSkills"
+            size="xs"
+            :label="$t('settings.skills.sort.priority')"
+            :variant="skillSortMode === 'priority' ? 'solid' : 'outline'"
+            :color="skillSortMode === 'priority' ? 'primary' : 'neutral'"
+            @click="setSkillSortMode('priority')"
+          />
+          <UButton
+            size="xs"
+            :label="$t('settings.skills.sort.ingame')"
+            :variant="skillSortMode === 'ingame' ? 'solid' : 'outline'"
+            :color="skillSortMode === 'ingame' ? 'primary' : 'neutral'"
+            @click="setSkillSortMode('ingame')"
           />
         </div>
-        <div v-if="allGameSkills.length === 0" class="text-surface-400 py-6 text-center text-sm">
-          {{ $t('settings.skills.no_skills') }}
+      </template>
+      <template #content>
+        <div class="space-y-4 px-4 py-4">
+          <p class="text-surface-400 text-xs">
+            {{
+              $t(
+                'settings.skills.explanation',
+                `Quest rewards are auto-calculated. Enter your total skill level (max ${MAX_SKILL_LEVEL}) to adjust the offset.`
+              )
+            }}
+          </p>
+          <div
+            v-if="allGameSkills.length > 0"
+            class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          >
+            <div
+              v-for="skill in visibleSkills"
+              :id="getSkillCardId(skill.key)"
+              :key="skill.key"
+              class="rounded-lg border p-3 transition-colors"
+              :class="skillCardClasses(skill.key)"
+              @click="handleSkillCardClick(skill.key, $event)"
+            >
+              <div class="mb-2 flex items-center gap-2">
+                <div class="group relative shrink-0">
+                  <img
+                    v-if="skill.imageLink"
+                    :src="skill.imageLink"
+                    :alt="skill.name"
+                    class="relative z-10 h-10 w-10 rounded object-contain transition-transform duration-200 ease-out group-hover:z-50 group-hover:scale-[2.5] group-hover:rounded-md group-hover:shadow-xl"
+                    loading="lazy"
+                  />
+                  <div
+                    v-else
+                    class="bg-surface-700 flex h-10 w-10 items-center justify-center rounded text-xs"
+                  >
+                    ?
+                  </div>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1">
+                    <span class="text-surface-100 truncate text-sm font-semibold">
+                      {{ formatSkillName(skill.name) }}
+                    </span>
+                    <UTooltip
+                      v-if="skill.requiredByTasks.length > 0"
+                      :text="$t('skills.required_for', { items: skill.requiredByTasks.join(', ') })"
+                    >
+                      <UBadge color="warning" variant="soft" size="xs">
+                        {{ $t('skills.req') }}
+                      </UBadge>
+                    </UTooltip>
+                    <UTooltip
+                      v-if="skill.requiredLevels.length > 0"
+                      :text="
+                        $t('skills.required_levels', { items: skill.requiredLevels.join(', ') })
+                      "
+                    >
+                      <UBadge color="accent" variant="soft" size="xs">
+                        {{ $t('skills.lv') }} {{ formatRequiredLevels(skill.requiredLevels) }}
+                      </UBadge>
+                    </UTooltip>
+                  </div>
+                  <div class="text-surface-400 truncate text-xs">
+                    <span v-if="skill.requiredByTasks.length > 0">
+                      {{ $t('settings.skills.req_count') }} {{ skill.requiredByTasks.length }}
+                    </span>
+                    <span
+                      v-if="skill.requiredByTasks.length > 0 && skill.rewardedByTasks.length > 0"
+                      class="mx-1"
+                    >
+                      •
+                    </span>
+                    <span v-if="skill.rewardedByTasks.length > 0">
+                      {{ $t('settings.skills.reward_count') }}
+                      {{ skill.rewardedByTasks.length }}
+                    </span>
+                  </div>
+                </div>
+                <span
+                  class="shrink-0 text-lg font-bold"
+                  :class="
+                    getSkillLevel(skill.key) >= MAX_SKILL_LEVEL
+                      ? 'text-warning-500'
+                      : 'text-primary-400'
+                  "
+                >
+                  {{ getDisplayLevel(skill.key) }}
+                </span>
+              </div>
+              <div class="mb-2 flex gap-3 text-xs">
+                <div class="text-surface-400 flex-1">
+                  {{ $t('settings.skills.quest') }}
+                  <span class="text-surface-200 font-medium">
+                    {{ getQuestSkillLevel(skill.key) }}
+                  </span>
+                </div>
+                <div class="text-surface-400 flex-1">
+                  {{ $t('settings.skills.offset') }}
+                  <span class="text-surface-200 font-medium">{{ getSkillOffset(skill.key) }}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <label :for="getSkillInputId(skill.key)" class="sr-only">
+                  {{ formatSkillName(skill.name) }} {{ $t('settings.skills.level') }}
+                </label>
+                <UInput
+                  :id="getSkillInputId(skill.key)"
+                  :model-value="getSkillLevel(skill.key)"
+                  type="text"
+                  inputmode="decimal"
+                  :min="0"
+                  placeholder="0"
+                  size="sm"
+                  class="flex-1"
+                  :aria-describedby="getSkillRangeId(skill.key)"
+                  @keydown="preventInvalidInput"
+                  @paste="(event: ClipboardEvent) => onPaste(event, skill.key)"
+                  @focus="resetSkillLimitToast"
+                  @blur="resetSkillLimitToast"
+                  @update:model-value="(value) => updateSkillLevel(skill.key, value)"
+                />
+                <span :id="getSkillRangeId(skill.key)" class="sr-only">
+                  {{ $t('settings.skills.valid_range', `Valid range: 0 to ${MAX_SKILL_LEVEL}`) }}
+                </span>
+                <UButton
+                  icon="i-mdi-refresh"
+                  size="sm"
+                  variant="soft"
+                  color="neutral"
+                  class="min-w-20"
+                  :disabled="getSkillOffset(skill.key) === 0"
+                  @click="resetOffset(skill.key)"
+                >
+                  {{ $t('settings.reset') }}
+                </UButton>
+              </div>
+            </div>
+          </div>
+          <div v-if="hasShowAllToggle" class="flex justify-center pt-2">
+            <UButton
+              :label="
+                showAllSkills ? $t('settings.skills.show_less') : $t('settings.skills.show_all')
+              "
+              variant="soft"
+              color="neutral"
+              @click="showAllSkills = !showAllSkills"
+            />
+          </div>
+          <div v-if="allGameSkills.length === 0" class="text-surface-400 py-6 text-center text-sm">
+            {{ $t('settings.skills.no_skills') }}
+          </div>
         </div>
-      </div>
-    </template>
-  </GenericCard>
+      </template>
+    </GenericCard>
+  </div>
 </template>
 <script setup lang="ts">
   import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
@@ -183,12 +189,17 @@
   import { useSkillCalculation } from '@/composables/useSkillCalculation';
   import { usePreferencesStore } from '@/stores/usePreferences';
   import { MAX_SKILL_LEVEL, type SkillSortMode } from '@/utils/constants';
+  import { getQueryString } from '@/utils/routeHelpers';
   const { t } = useI18n({ useScope: 'global' });
+  const route = useRoute();
+  const router = useRouter();
   const skillCalculation = useSkillCalculation();
   const preferencesStore = usePreferencesStore();
   const allGameSkills = computed(() => skillCalculation.allGameSkills.value);
   const showAllSkills = ref(false);
   const skillSortMode = computed(() => preferencesStore.getSkillSortMode);
+  const highlightedSkillKey = ref<string | null>(null);
+  const skillHighlightTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
   const setSkillSortMode = (mode: SkillSortMode) => {
     preferencesStore.setSkillSortMode(mode);
   };
@@ -218,6 +229,16 @@
     if (showAllSkills.value) return allGameSkills.value;
     return allGameSkills.value.slice(0, collapsedVisibleCount.value);
   });
+  const getSkillCardId = (skillKey: string): string =>
+    `settings-skill-${skillKey.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+  const skillCardClasses = (skillKey: string) => {
+    return [
+      'border-surface-700 hover:border-surface-500',
+      highlightedSkillKey.value === skillKey
+        ? 'ring-primary-500 ring-offset-surface-950 border-primary-500/60 ring-2 ring-offset-2'
+        : '',
+    ];
+  };
   const skillAliasesForMigration = computed(() => {
     return Array.from(
       new Set(
@@ -371,6 +392,40 @@
   const resetOffset = (skillName: string) => {
     skillCalculation.resetSkillOffset(skillName);
   };
+  const clearSkillHighlight = () => {
+    if (skillHighlightTimeout.value) {
+      clearTimeout(skillHighlightTimeout.value);
+      skillHighlightTimeout.value = null;
+    }
+    highlightedSkillKey.value = null;
+  };
+  const focusSkillFromRoute = async () => {
+    const skillQuery = getQueryString(route.query.skill);
+    if (!skillQuery || allGameSkills.value.length === 0) return;
+    const targetSkill = skillCalculation.getSkillMetadata(skillQuery);
+    if (!targetSkill) return;
+    if (!visibleSkills.value.some((skill) => skill.key === targetSkill.key)) {
+      showAllSkills.value = true;
+      await nextTick();
+    }
+    await nextTick();
+    const targetElement = document.getElementById(getSkillCardId(targetSkill.key));
+    if (!targetElement) return;
+    clearSkillHighlight();
+    highlightedSkillKey.value = targetSkill.key;
+    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    skillHighlightTimeout.value = setTimeout(() => {
+      highlightedSkillKey.value = null;
+      skillHighlightTimeout.value = null;
+    }, 2500);
+    const nextQuery = { ...route.query };
+    delete nextQuery.skill;
+    router.replace({
+      hash: route.hash,
+      path: route.path,
+      query: nextQuery,
+    });
+  };
   let lastSkillAliasMigrationSignature = '';
   watch(
     () => skillAliasesForMigration.value.join('|'),
@@ -381,4 +436,14 @@
     },
     { immediate: true }
   );
+  watch(
+    [() => route.query.skill, () => allGameSkills.value.length],
+    async () => {
+      await focusSkillFromRoute();
+    },
+    { immediate: true }
+  );
+  onBeforeUnmount(() => {
+    clearSkillHighlight();
+  });
 </script>

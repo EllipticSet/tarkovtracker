@@ -5,16 +5,19 @@
     :role="isOverlayMode ? 'dialog' : 'complementary'"
     :aria-modal="isOverlayMode ? 'true' : undefined"
     aria-labelledby="needed-items-settings-drawer-title"
-    class="bg-surface-800/95 w-72 overflow-y-auto rounded-lg border border-white/10 p-4 shadow-xl backdrop-blur-sm"
+    class="overflow-y-auto backdrop-blur-sm"
     :class="
       isOverlayMode
-        ? 'fixed top-1/2 right-4 z-40 h-fit max-h-[calc(100vh-6rem)] -translate-y-1/2'
-        : 'sticky top-6 max-h-[calc(100vh-3rem)]'
+        ? 'bg-surface-900/96 fixed right-3 bottom-3 left-3 z-40 flex max-h-[72vh] flex-col rounded-[28px] border border-white/10 p-4 shadow-2xl sm:top-24 sm:right-4 sm:bottom-4 sm:left-auto sm:max-h-[calc(100vh-7rem)] sm:w-96'
+        : 'bg-surface-900/98 h-full w-full rounded-2xl border border-white/8 p-5 shadow-2xl'
     "
     @keydown="handleKeydown"
   >
-    <div class="mb-3 flex items-center justify-between">
-      <h2 id="needed-items-settings-drawer-title" class="text-sm font-semibold text-white">
+    <div class="mb-4 flex items-center justify-between gap-3">
+      <h2
+        id="needed-items-settings-drawer-title"
+        class="text-base font-semibold tracking-[0.04em] text-white"
+      >
         {{ t('page.needed_items.settings.title', 'Needed Items Settings') }}
       </h2>
       <UButton
@@ -27,30 +30,30 @@
       />
     </div>
     <div class="space-y-3">
-      <div class="rounded-lg border border-white/10 p-3">
-        <div class="mb-2">
-          <h3 class="text-surface-200 text-[10px] font-semibold tracking-wider uppercase">
+      <div class="rounded-2xl border border-white/10 p-4">
+        <div class="mb-3">
+          <h3 class="text-surface-200 text-[11px] font-semibold tracking-[0.18em] uppercase">
             {{ t('page.needed_items.filters.label') }}
           </h3>
         </div>
-        <div class="space-y-2">
+        <div class="space-y-3">
           <div
-            class="bg-surface-900/60 flex items-center gap-1 rounded-md border border-white/10 p-1"
+            class="bg-surface-900/60 flex items-center gap-1 rounded-lg border border-white/10 p-1"
           >
             <UButton
               variant="ghost"
               color="neutral"
-              size="xs"
+              size="sm"
               class="flex-1"
               :class="firFilter === 'all' ? 'bg-white/10 text-white' : 'text-surface-300'"
               @click="firFilter = 'all'"
             >
-              {{ t('page.tasks.primary_views.all') }}
+              {{ t('page.needed_items.filters.all', 'All') }}
             </UButton>
             <UButton
               variant="ghost"
               color="neutral"
-              size="xs"
+              size="sm"
               class="flex-1"
               :class="firFilter === 'fir' ? 'bg-white/10 text-white' : 'text-surface-300'"
               @click="firFilter = 'fir'"
@@ -60,7 +63,7 @@
             <UButton
               variant="ghost"
               color="neutral"
-              size="xs"
+              size="sm"
               class="flex-1"
               :class="firFilter === 'non-fir' ? 'bg-white/10 text-white' : 'text-surface-300'"
               @click="firFilter = 'non-fir'"
@@ -94,18 +97,18 @@
           />
         </div>
       </div>
-      <div class="rounded-lg border border-white/10 p-3">
-        <div class="mb-2">
-          <h3 class="text-surface-200 text-[10px] font-semibold tracking-wider uppercase">
+      <div class="rounded-2xl border border-white/10 p-4">
+        <div class="mb-3">
+          <h3 class="text-surface-200 text-[11px] font-semibold tracking-[0.18em] uppercase">
             {{ t('page.tasks.settings.tabs.appearance') }}
           </h3>
         </div>
-        <div class="space-y-2">
+        <div class="space-y-3">
           <div class="flex flex-wrap gap-2">
             <UButton
               variant="ghost"
               color="neutral"
-              size="xs"
+              size="sm"
               icon="i-mdi-view-list"
               :class="
                 !groupByItem && viewMode === 'list' ? 'bg-white/10 text-white' : 'text-surface-300'
@@ -117,7 +120,7 @@
             <UButton
               variant="ghost"
               color="neutral"
-              size="xs"
+              size="sm"
               icon="i-mdi-view-grid"
               :class="
                 !groupByItem && viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-surface-300'
@@ -129,7 +132,7 @@
             <UButton
               variant="ghost"
               color="neutral"
-              size="xs"
+              size="sm"
               icon="i-mdi-group"
               :class="groupByItem ? 'bg-white/10 text-white' : 'text-surface-300'"
               @click="setGroupedView"
@@ -141,7 +144,7 @@
             v-if="!groupByItem && viewMode === 'grid'"
             variant="soft"
             color="neutral"
-            size="xs"
+            size="sm"
             :icon="cardStyle === 'compact' ? 'i-mdi-image' : 'i-mdi-image-text'"
             class="justify-start"
             @click="toggleCardStyle"
@@ -193,7 +196,10 @@
   const { close } = useNeededItemsSettingsDrawer();
   const isOverlayMode = computed(() => props.mode === 'overlay');
   const drawerRef = ref<HTMLElement | null>(null);
-  const triggerElement = ref<HTMLElement | null>(null);
+  const { restoreTriggerFocus, trapFocus } = useOverlayFocusTrap({
+    containerRef: drawerRef,
+    isOverlayMode,
+  });
   const firFilter = computed({
     get: () => props.firFilter,
     set: (value: FirFilter) => emit('update:firFilter', value),
@@ -241,21 +247,6 @@
   const toggleCardStyle = () => {
     cardStyle.value = cardStyle.value === 'compact' ? 'expanded' : 'compact';
   };
-  const focusDrawer = async () => {
-    await nextTick();
-    drawerRef.value?.focus({ preventScroll: true });
-  };
-  const storeTriggerElement = () => {
-    const activeElement = document.activeElement;
-    if (activeElement instanceof HTMLElement && !drawerRef.value?.contains(activeElement)) {
-      triggerElement.value = activeElement;
-    }
-  };
-  const restoreTriggerFocus = () => {
-    const trigger = triggerElement.value;
-    if (!trigger || !document.contains(trigger)) return;
-    trigger.focus({ preventScroll: true });
-  };
   const handleClose = () => {
     close();
     if (!isOverlayMode.value) return;
@@ -263,47 +254,11 @@
       restoreTriggerFocus();
     });
   };
-  const getFocusableElements = () => {
-    const drawer = drawerRef.value;
-    if (!drawer) return [];
-    return Array.from(
-      drawer.querySelectorAll<HTMLElement>(
-        'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])'
-      )
-    ).filter((element) => !element.hasAttribute('disabled') && element.tabIndex !== -1);
-  };
   const handleKeydown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') {
       handleClose();
       return;
     }
-    if (!isOverlayMode.value) return;
-    if (event.key !== 'Tab') return;
-    const focusable = getFocusableElements();
-    if (focusable.length === 0) {
-      event.preventDefault();
-      drawerRef.value?.focus({ preventScroll: true });
-      return;
-    }
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (!first || !last) return;
-    const activeElement = document.activeElement as HTMLElement | null;
-    if (event.shiftKey) {
-      if (activeElement === first || activeElement === drawerRef.value) {
-        event.preventDefault();
-        last.focus({ preventScroll: true });
-      }
-      return;
-    }
-    if (activeElement === last || activeElement === drawerRef.value) {
-      event.preventDefault();
-      first.focus({ preventScroll: true });
-    }
+    trapFocus(event);
   };
-  onMounted(() => {
-    if (!isOverlayMode.value) return;
-    storeTriggerElement();
-    focusDrawer();
-  });
 </script>

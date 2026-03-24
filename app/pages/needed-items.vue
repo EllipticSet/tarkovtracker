@@ -1,9 +1,6 @@
 <template>
-  <div>
-    <div
-      class="px-3 py-6 transition-[padding] duration-200 sm:px-6"
-      :class="{ 'lg:pr-80': isSettingsDrawerOpen }"
-    >
+  <div class="flex min-h-full overflow-x-hidden">
+    <div class="min-w-0 flex-1 px-3 py-6 sm:px-6">
       <div class="mx-auto max-w-[1400px]">
         <NeededItemsFilterBar
           v-model="activeFilter"
@@ -116,21 +113,18 @@
         </UCard>
       </div>
     </div>
-    <USlideover
-      :open="isSettingsDrawerOpen"
-      side="right"
-      :ui="{
-        content: 'w-full max-w-sm bg-transparent shadow-none ring-0 sm:max-w-sm',
-        body: 'p-4',
-      }"
-      @update:open="
-        (open) => {
-          if (!open) closeSettingsDrawer();
-        }
-      "
+    <Transition
+      enter-active-class="transition-all duration-200 ease-out"
+      enter-from-class="translate-x-4 opacity-0"
+      enter-to-class="translate-x-0 opacity-100"
+      leave-active-class="transition-all duration-200 ease-in"
+      leave-from-class="translate-x-0 opacity-100"
+      leave-to-class="translate-x-4 opacity-0"
     >
-      <template #body>
+      <div v-if="isDesktopSideRailOpen" class="hidden w-[26rem] shrink-0 px-4 py-6 lg:block">
+        <PageHelpPanel v-if="isDesktopHelpPanelOpen" page-key="needed_items" mode="docked" />
         <NeededItemsSettingsDrawer
+          v-else-if="isDesktopSettingsDrawerOpen"
           mode="docked"
           :active-filter="activeFilter"
           :fir-filter="firFilter"
@@ -150,13 +144,59 @@
           @update:group-by-item="groupByItem = $event"
           @update:card-style="cardStyle = $event"
         />
-      </template>
-    </USlideover>
+      </div>
+    </Transition>
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-all duration-200 ease-out"
+        enter-from-class="translate-y-2 opacity-0 sm:translate-x-4 sm:translate-y-0"
+        enter-to-class="translate-y-0 opacity-100 sm:translate-x-0"
+        leave-active-class="transition-all duration-150 ease-in"
+        leave-from-class="translate-y-0 opacity-100 sm:translate-x-0"
+        leave-to-class="translate-y-2 opacity-0 sm:translate-x-4 sm:translate-y-0"
+      >
+        <NeededItemsSettingsDrawer
+          v-if="isMobileSettingsDrawerOpen"
+          mode="overlay"
+          :active-filter="activeFilter"
+          :fir-filter="firFilter"
+          :hide-owned="hideOwned"
+          :hide-non-fir-special-equipment="hideNonFirSpecialEquipment"
+          :hide-team-items="hideTeamItems"
+          :kappa-only="kappaOnly"
+          :view-mode="viewMode"
+          :group-by-item="groupByItem"
+          :card-style="cardStyle"
+          @update:fir-filter="firFilter = $event"
+          @update:hide-owned="hideOwned = $event"
+          @update:hide-non-fir-special-equipment="hideNonFirSpecialEquipment = $event"
+          @update:hide-team-items="hideTeamItems = $event"
+          @update:kappa-only="kappaOnly = $event"
+          @update:view-mode="viewMode = $event"
+          @update:group-by-item="groupByItem = $event"
+          @update:card-style="cardStyle = $event"
+        />
+      </Transition>
+    </Teleport>
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-all duration-200 ease-out"
+        enter-from-class="translate-y-2 opacity-0 sm:translate-x-4 sm:translate-y-0"
+        enter-to-class="translate-y-0 opacity-100 sm:translate-x-0"
+        leave-active-class="transition-all duration-150 ease-in"
+        leave-from-class="translate-y-0 opacity-100 sm:translate-x-0"
+        leave-to-class="translate-y-2 opacity-0 sm:translate-x-4 sm:translate-y-0"
+      >
+        <PageHelpPanel v-if="isMobileHelpPanelOpen" page-key="needed_items" mode="overlay" />
+      </Transition>
+    </Teleport>
   </div>
 </template>
 <script setup lang="ts">
+  import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
   import { useI18n } from 'vue-i18n';
   import { useNeededItemsSettingsDrawer } from '@/composables/useNeededItemsSettingsDrawer';
+  import { usePageHelpState } from '@/composables/usePageHelpState';
   import { useProductAnalytics } from '@/composables/useProductAnalytics';
   import NeededItem from '@/features/neededitems/NeededItem.vue';
   import NeededItemGroupedCard from '@/features/neededitems/NeededItemGroupedCard.vue';
@@ -178,8 +218,18 @@
   });
   const { t } = useI18n({ useScope: 'global' });
   const { trackNeededItemsView } = useProductAnalytics();
+  const { close: closeHelp, isOpen: isHelpOpen } = usePageHelpState('needed_items');
   const { close: closeSettingsDrawer, isOpen: isSettingsDrawerOpen } =
     useNeededItemsSettingsDrawer();
+  const breakpoints = useBreakpoints(breakpointsTailwind);
+  const isLgAndUp = breakpoints.greaterOrEqual('lg');
+  const isDesktopSettingsDrawerOpen = computed(() => isSettingsDrawerOpen.value && isLgAndUp.value);
+  const isMobileSettingsDrawerOpen = computed(() => isSettingsDrawerOpen.value && !isLgAndUp.value);
+  const isDesktopHelpPanelOpen = computed(() => isHelpOpen.value && isLgAndUp.value);
+  const isMobileHelpPanelOpen = computed(() => isHelpOpen.value && !isLgAndUp.value);
+  const isDesktopSideRailOpen = computed(
+    () => isLgAndUp.value && (isHelpOpen.value || isSettingsDrawerOpen.value)
+  );
   useSeoMeta({
     title: () => t('page.needed_items.title'),
     description: () => t('page.needed_items.meta_description'),
@@ -214,6 +264,14 @@
   const perfSessionStartedAt = ref<number | null>(null);
   const hasUserScrolled = ref(false);
   const canPageScroll = ref(false);
+  watch(isSettingsDrawerOpen, (isOpen) => {
+    if (!isOpen) return;
+    closeHelp({ restoreFocus: false });
+  });
+  watch(isHelpOpen, (isOpen) => {
+    if (!isOpen) return;
+    closeSettingsDrawer();
+  });
   const updatePageScrollState = () => {
     if (typeof window === 'undefined') return;
     const doc = document.documentElement;

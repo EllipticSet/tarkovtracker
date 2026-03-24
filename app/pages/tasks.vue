@@ -1,9 +1,6 @@
 <template>
   <div class="flex min-h-full overflow-x-hidden">
-    <div
-      class="min-w-0 flex-1 px-3 py-6 transition-[padding] duration-200 sm:px-6"
-      :class="{ 'lg:pr-80': isOverlaySettingsDrawerOpen && !showMapDisplay }"
-    >
+    <div class="min-w-0 flex-1 px-3 py-6 sm:px-6">
       <div class="mx-auto max-w-[1400px]">
         <TaskLoadingState v-if="isLoading" />
         <div v-else>
@@ -281,27 +278,35 @@
       leave-from-class="translate-x-0 opacity-100"
       leave-to-class="translate-x-4 opacity-0"
     >
-      <div v-if="isDockedSettingsDrawerOpen" class="shrink-0 px-4 py-6">
-        <TaskSettingsDrawer mode="docked" />
+      <div v-if="isDesktopSideRailOpen" class="hidden w-[26rem] shrink-0 px-4 py-6 lg:block">
+        <PageHelpPanel v-if="isDesktopHelpPanelOpen" page-key="tasks" mode="docked" />
+        <TaskSettingsDrawer v-else-if="isDesktopSettingsDrawerOpen" mode="docked" />
       </div>
     </Transition>
-    <USlideover
-      :open="isOverlaySettingsDrawerOpen"
-      side="right"
-      :ui="{
-        content: 'w-full max-w-sm bg-transparent shadow-none ring-0 sm:max-w-sm',
-        body: 'p-4',
-      }"
-      @update:open="
-        (open) => {
-          if (!open) closeSettingsDrawer();
-        }
-      "
-    >
-      <template #body>
-        <TaskSettingsDrawer mode="docked" />
-      </template>
-    </USlideover>
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-all duration-200 ease-out"
+        enter-from-class="translate-y-2 opacity-0 sm:translate-x-4 sm:translate-y-0"
+        enter-to-class="translate-y-0 opacity-100 sm:translate-x-0"
+        leave-active-class="transition-all duration-150 ease-in"
+        leave-from-class="translate-y-0 opacity-100 sm:translate-x-0"
+        leave-to-class="translate-y-2 opacity-0 sm:translate-x-4 sm:translate-y-0"
+      >
+        <TaskSettingsDrawer v-if="isMobileSettingsDrawerOpen" mode="overlay" />
+      </Transition>
+    </Teleport>
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-all duration-200 ease-out"
+        enter-from-class="translate-y-2 opacity-0 sm:translate-x-4 sm:translate-y-0"
+        enter-to-class="translate-y-0 opacity-100 sm:translate-x-0"
+        leave-active-class="transition-all duration-150 ease-in"
+        leave-from-class="translate-y-0 opacity-100 sm:translate-x-0"
+        leave-to-class="translate-y-2 opacity-0 sm:translate-x-4 sm:translate-y-0"
+      >
+        <PageHelpPanel v-if="isMobileHelpPanelOpen" page-key="tasks" mode="overlay" />
+      </Transition>
+    </Teleport>
     <Teleport to="body">
       <Transition
         enter-active-class="transition ease-out duration-200"
@@ -357,6 +362,7 @@
   import { useInfiniteScroll } from '@/composables/useInfiniteScroll';
   import { useMapObjectivePopup } from '@/composables/useMapObjectivePopup';
   import { useMapResize } from '@/composables/useMapResize';
+  import { usePageHelpState } from '@/composables/usePageHelpState';
   import { useTarkovTime } from '@/composables/useTarkovTime';
   import { useTaskDeepLink } from '@/composables/useTaskDeepLink';
   import { useTaskFiltering } from '@/composables/useTaskFiltering';
@@ -441,6 +447,7 @@
   );
   const userGameEdition = computed(() => tarkovStore.getGameEdition());
   const { tarkovTime } = useTarkovTime();
+  const { close: closeHelp, isOpen: isHelpOpen } = usePageHelpState('tasks');
   const { close: closeSettingsDrawer, isOpen: isSettingsDrawerOpen } = useTaskSettingsDrawer();
   const breakpoints = useBreakpoints(breakpointsTailwind);
   const isLgAndUp = breakpoints.greaterOrEqual('lg');
@@ -513,12 +520,13 @@
   const showGraphView = computed(() => {
     return getTaskPrimaryView.value === 'graph';
   });
-  const isDockedSettingsDrawerOpen = computed(() => {
-    return isSettingsDrawerOpen.value && showMapDisplay.value && isLgAndUp.value;
-  });
-  const isOverlaySettingsDrawerOpen = computed(() => {
-    return isSettingsDrawerOpen.value && (!showMapDisplay.value || !isLgAndUp.value);
-  });
+  const isDesktopSettingsDrawerOpen = computed(() => isSettingsDrawerOpen.value && isLgAndUp.value);
+  const isMobileSettingsDrawerOpen = computed(() => isSettingsDrawerOpen.value && !isLgAndUp.value);
+  const isDesktopHelpPanelOpen = computed(() => isHelpOpen.value && isLgAndUp.value);
+  const isMobileHelpPanelOpen = computed(() => isHelpOpen.value && !isLgAndUp.value);
+  const isDesktopSideRailOpen = computed(
+    () => isLgAndUp.value && (isHelpOpen.value || isSettingsDrawerOpen.value)
+  );
   const shouldShowCompletedObjectives = computed(() => {
     return ['completed', 'all'].includes(getTaskSecondaryView.value);
   });
@@ -756,6 +764,14 @@
       debouncedRefreshVisibleTasks.cancel();
     });
   };
+  watch(isSettingsDrawerOpen, (isOpen) => {
+    if (!isOpen) return;
+    closeHelp({ restoreFocus: false });
+  });
+  watch(isHelpOpen, (isOpen) => {
+    if (!isOpen) return;
+    closeSettingsDrawer();
+  });
   watch(
     [
       getTaskPrimaryView,

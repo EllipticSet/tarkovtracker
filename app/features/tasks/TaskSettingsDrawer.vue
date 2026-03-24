@@ -5,11 +5,11 @@
     :role="isOverlayMode ? 'dialog' : 'complementary'"
     :aria-modal="isOverlayMode ? 'true' : undefined"
     aria-labelledby="task-settings-drawer-title"
-    class="bg-surface-800/95 w-72 overflow-y-auto rounded-lg border border-white/10 p-4 shadow-xl backdrop-blur-sm"
+    class="overflow-y-auto backdrop-blur-sm"
     :class="
       isOverlayMode
-        ? 'fixed top-1/2 right-4 z-40 h-fit max-h-[calc(100vh-6rem)] -translate-y-1/2'
-        : 'sticky top-6 max-h-[calc(100vh-3rem)]'
+        ? 'bg-surface-900/96 fixed right-3 bottom-3 left-3 z-40 flex max-h-[72vh] flex-col rounded-[28px] border border-white/10 p-4 shadow-2xl sm:top-24 sm:right-4 sm:bottom-4 sm:left-auto sm:max-h-[calc(100vh-7rem)] sm:w-96'
+        : 'bg-surface-800/95 sticky top-6 max-h-[calc(100vh-3rem)] w-72 rounded-lg border border-white/10 p-4 shadow-xl'
     "
     @keydown="handleKeydown"
   >
@@ -126,7 +126,10 @@
   const preferencesStore = usePreferencesStore();
   const teamStore = useTeamStore();
   const drawerRef = ref<HTMLElement | null>(null);
-  const triggerElement = ref<HTMLElement | null>(null);
+  const { restoreTriggerFocus, trapFocus } = useOverlayFocusTrap({
+    containerRef: drawerRef,
+    isOverlayMode,
+  });
   const showRepairConfirm = ref(false);
   const repairConfirmResolver = ref<((value: boolean) => void) | null>(null);
   const requestRepairConfirm = () =>
@@ -143,21 +146,6 @@
     }
   };
   const { failedTasksCount, repairFailedTasks } = useTaskRepair({ requestRepairConfirm });
-  const focusDrawer = async () => {
-    await nextTick();
-    drawerRef.value?.focus({ preventScroll: true });
-  };
-  const storeTriggerElement = () => {
-    const activeElement = document.activeElement;
-    if (activeElement instanceof HTMLElement && !drawerRef.value?.contains(activeElement)) {
-      triggerElement.value = activeElement;
-    }
-  };
-  const restoreTriggerFocus = () => {
-    const trigger = triggerElement.value;
-    if (!trigger || !document.contains(trigger)) return;
-    trigger.focus({ preventScroll: true });
-  };
   const handleClose = () => {
     close();
     if (!isOverlayMode.value) return;
@@ -165,49 +153,13 @@
       restoreTriggerFocus();
     });
   };
-  const getFocusableElements = () => {
-    const drawer = drawerRef.value;
-    if (!drawer) return [];
-    return Array.from(
-      drawer.querySelectorAll<HTMLElement>(
-        'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])'
-      )
-    ).filter((element) => !element.hasAttribute('disabled') && element.tabIndex !== -1);
-  };
   const handleKeydown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') {
       handleClose();
       return;
     }
-    if (!isOverlayMode.value) return;
-    if (event.key !== 'Tab') return;
-    const focusable = getFocusableElements();
-    if (focusable.length === 0) {
-      event.preventDefault();
-      drawerRef.value?.focus({ preventScroll: true });
-      return;
-    }
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (!first || !last) return;
-    const activeElement = document.activeElement as HTMLElement | null;
-    if (event.shiftKey) {
-      if (activeElement === first || activeElement === drawerRef.value) {
-        event.preventDefault();
-        last.focus({ preventScroll: true });
-      }
-      return;
-    }
-    if (activeElement === last || activeElement === drawerRef.value) {
-      event.preventDefault();
-      first.focus({ preventScroll: true });
-    }
+    trapFocus(event);
   };
-  onMounted(() => {
-    if (!isOverlayMode.value) return;
-    storeTriggerElement();
-    focusDrawer();
-  });
   onBeforeUnmount(() => {
     resolveRepairConfirm(false);
   });

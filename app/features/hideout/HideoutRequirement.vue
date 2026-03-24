@@ -1,7 +1,7 @@
 <template>
   <!-- Compact Card Layout - Works for ALL items -->
   <div
-    class="group relative flex flex-col items-center rounded-lg border p-2 transition-all select-none hover:scale-105"
+    class="group relative flex flex-col items-center rounded-lg border p-1.5 transition-all select-none hover:scale-105 sm:p-2"
     :class="[
       isComplete
         ? 'border-success-500/50 bg-success-900/20'
@@ -11,7 +11,7 @@
     @contextmenu.prevent="openContextMenu"
   >
     <!-- Item Image -->
-    <div class="relative mb-2 h-16 w-16 shrink-0">
+    <div class="relative mb-1.5 h-14 w-14 shrink-0 sm:mb-2 sm:h-16 sm:w-16">
       <GameItem
         :item-id="requirement.item.id"
         :item-name="requirement.item.name"
@@ -26,7 +26,7 @@
         v-if="isComplete"
         class="bg-success-500/40 absolute inset-0 flex items-center justify-center rounded"
       >
-        <UIcon name="i-mdi-check-circle" class="text-success-300 h-8 w-8" />
+        <UIcon name="i-mdi-check-circle" class="text-success-300 h-6 w-6 sm:h-8 sm:w-8" />
       </div>
       <!-- FiR Badge -->
       <AppTooltip
@@ -41,7 +41,7 @@
       <!-- Count Badge for multi-count items -->
       <div v-if="requiredCount > 1" class="absolute right-0 -bottom-1 left-0 flex justify-center">
         <div
-          class="border-surface-700 bg-surface-900/90 rounded border px-1.5 py-0.5 text-[10px] font-bold"
+          class="border-surface-700 bg-surface-900/90 rounded border px-1 py-0.5 text-[9px] font-bold sm:px-1.5 sm:text-[10px]"
           :class="isComplete ? 'text-success-400' : 'text-surface-300'"
         >
           {{ formatNumber(currentCount) }}/{{ formatNumber(requiredCount) }}
@@ -49,7 +49,9 @@
       </div>
     </div>
     <!-- Item Name -->
-    <div class="text-surface-200 line-clamp-2 w-full text-center text-xs leading-tight font-medium">
+    <div
+      class="text-surface-200 line-clamp-2 w-full text-center text-[11px] leading-tight font-medium sm:text-xs"
+    >
       {{ requirement.item.name }}
     </div>
   </div>

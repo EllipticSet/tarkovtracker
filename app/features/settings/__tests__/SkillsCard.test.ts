@@ -34,6 +34,7 @@ vi.mock('@vueuse/core', async (importOriginal) => {
     ...actual,
     useBreakpoints: () => ({
       greaterOrEqual: () => ref(true),
+      smaller: () => ref(false),
     }),
     breakpointsTailwind: {},
   };
