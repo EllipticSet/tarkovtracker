@@ -29,7 +29,6 @@ updates:
     groups:
       nuxt-ecosystem:
         dependency-type: production
-        group-by: dependency-name
         patterns:
           - nuxt
           - '@nuxt/*'
@@ -45,7 +44,6 @@ updates:
           - patch
       lint-and-format:
         dependency-type: development
-        group-by: dependency-name
         patterns:
           - eslint*
           - '@nuxt/eslint'
@@ -59,7 +57,6 @@ updates:
           - patch
       testing-tooling:
         dependency-type: development
-        group-by: dependency-name
         patterns:
           - vitest
           - '@vitest/*'
@@ -74,7 +71,6 @@ updates:
           - patch
       typescript-and-types:
         dependency-type: development
-        group-by: dependency-name
         patterns:
           - typescript
           - '@types/*'
@@ -84,7 +80,6 @@ updates:
           - patch
       tailwind-tooling:
         dependency-type: development
-        group-by: dependency-name
         patterns:
           - tailwindcss
           - '@tailwindcss/*'
@@ -96,7 +91,6 @@ updates:
           - minor
           - patch
       cloudflare-tooling:
-        group-by: dependency-name
         patterns:
           - wrangler
           - '@cloudflare/*'
@@ -105,7 +99,6 @@ updates:
           - patch
       release-tooling:
         dependency-type: development
-        group-by: dependency-name
         patterns:
           - semantic-release
           - '@semantic-release/*'

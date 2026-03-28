@@ -21,8 +21,8 @@ Automated CI/CD and maintenance workflows for TarkovTracker.
 
 ### PR Checks (`pr-checks.yml`)
 
-**Trigger:** PR opened/updated/labeled
-**Jobs:** `PR Meta` (labels, size, commit validation), `Lighthouse` (conditional on ui/performance label)
+**Trigger:** PR opened/updated/reopened
+**Jobs:** `PR Meta` (labels, size, commit validation, Lighthouse gating), `Lighthouse` (conditional on UI file changes or `ui`/`performance` labels)
 
 ### Stale (`stale.yml`)
 
@@ -36,7 +36,7 @@ Automated CI/CD and maintenance workflows for TarkovTracker.
 | PR | ~6 (Validate, Workers, PR Meta, Security Scan, CodeQL, Lighthouse*) |
 | Main push | ~5 (Validate, Workers, Security Scan, CodeQL, Release) |
 
-*Lighthouse only runs with `performance` or `ui` label
+*Lighthouse runs only when the PR touches UI paths or already carries `performance`/`ui`
 
 ## Secrets
 
