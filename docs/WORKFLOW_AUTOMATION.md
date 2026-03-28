@@ -155,6 +155,7 @@ Automated via Dependabot (`.github/dependabot.yml`):
 - Monthly grouped GitHub Actions updates
 - Cooldown windows to avoid immediate churn from fresh releases
 - Grouped minor/patch updates for low-risk tooling families
+- Version updates limited to direct dependencies; vulnerable transitives still surface through security updates
 - Maximum 3 concurrent npm PRs and 1 GitHub Actions PR
 - No automerge for version updates
 
@@ -174,6 +175,7 @@ Automated via Dependabot (`.github/dependabot.yml`):
 
 - Let Dependabot batch low-risk tooling updates for scheduled review windows
 - Keep major upgrades explicit
+- Keep transitive lockfile churn out of version-update PRs unless GitHub raises a security fix
 - Keep `.claude-plugin` updates out of the main app queue; review them monthly as isolated tooling maintenance
 - Review security PRs promptly; they remain separate from the scheduled version-update batches unless GitHub grouped security updates are enabled in repository settings
 

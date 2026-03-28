@@ -24,6 +24,8 @@ updates:
       prefix: chore(deps)
       prefix-development: chore(deps)
     versioning-strategy: increase-if-necessary
+    allow:
+      - dependency-type: direct
     ignore:
       - dependency-name: fast-xml-parser
         update-types:
@@ -137,6 +139,8 @@ updates:
       prefix: chore(deps)
       prefix-development: chore(deps)
     versioning-strategy: increase-if-necessary
+    allow:
+      - dependency-type: direct
     groups:
       claude-plugin-dev:
         dependency-type: development
