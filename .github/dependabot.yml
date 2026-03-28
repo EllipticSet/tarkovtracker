@@ -1,0 +1,137 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories:
+      - /
+      - /workers/api-gateway
+    schedule:
+      interval: weekly
+      day: monday
+      time: '03:00'
+      timezone: America/New_York
+    open-pull-requests-limit: 3
+    rebase-strategy: disabled
+    cooldown:
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    labels:
+      - dependencies
+      - javascript
+    commit-message:
+      prefix: chore(deps)
+      prefix-development: chore(deps)
+    versioning-strategy: increase-if-necessary
+    ignore:
+      - dependency-name: fast-xml-parser
+        update-types:
+          - version-update:semver-major
+    groups:
+      nuxt-ecosystem:
+        dependency-type: production
+        group-by: dependency-name
+        patterns:
+          - nuxt
+          - '@nuxt/*'
+          - '@nuxtjs/*'
+          - '@unhead/*'
+          - '@intlify/*'
+          - '@vueuse/*'
+          - vue
+          - vue-i18n
+          - vue-router
+        update-types:
+          - minor
+          - patch
+      lint-and-format:
+        dependency-type: development
+        group-by: dependency-name
+        patterns:
+          - eslint*
+          - '@nuxt/eslint'
+          - prettier
+          - prettier-*
+          - '@commitlint/*'
+          - lint-staged
+          - husky
+        update-types:
+          - minor
+          - patch
+      testing-tooling:
+        dependency-type: development
+        group-by: dependency-name
+        patterns:
+          - vitest
+          - '@vitest/*'
+          - '@nuxt/test-utils'
+          - '@vue/test-utils'
+          - happy-dom
+          - jsdom
+          - fake-indexeddb
+          - wait-on
+        update-types:
+          - minor
+          - patch
+      typescript-and-types:
+        dependency-type: development
+        group-by: dependency-name
+        patterns:
+          - typescript
+          - '@types/*'
+          - tsx
+        update-types:
+          - minor
+          - patch
+      tailwind-tooling:
+        dependency-type: development
+        group-by: dependency-name
+        patterns:
+          - tailwindcss
+          - '@tailwindcss/*'
+          - autoprefixer
+          - postcss
+          - prettier-plugin-tailwindcss
+          - sass
+        update-types:
+          - minor
+          - patch
+      cloudflare-tooling:
+        group-by: dependency-name
+        patterns:
+          - wrangler
+          - '@cloudflare/*'
+        update-types:
+          - minor
+          - patch
+      release-tooling:
+        dependency-type: development
+        group-by: dependency-name
+        patterns:
+          - semantic-release
+          - '@semantic-release/*'
+          - serve
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+      day: monday
+      time: '04:00'
+      timezone: America/New_York
+    open-pull-requests-limit: 1
+    rebase-strategy: disabled
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: chore(ci)
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
