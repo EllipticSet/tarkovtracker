@@ -98,6 +98,7 @@
   common: {
     cancel: 'Cancel',
     close: 'Close',
+    click: 'Click',
     previous: 'Previous',
     next: 'Next',
     finish: 'Finish',
@@ -566,6 +567,7 @@
     tasks: {
       title: 'Tasks',
       primary_views: {
+        all: 'List',
         list: 'List',
         maps: 'Maps',
         traders: 'Traders',

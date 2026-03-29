@@ -48,7 +48,7 @@
               :class="firFilter === 'all' ? 'bg-white/10 text-white' : 'text-surface-300'"
               @click="firFilter = 'all'"
             >
-              {{ t('needed_items.filters.all', 'All') }}
+              {{ t('page.needed_items.filters.all', 'All') }}
             </UButton>
             <UButton
               variant="ghost"
@@ -161,7 +161,6 @@
   </aside>
 </template>
 <script setup lang="ts">
-  import { useI18n } from 'vue-i18n';
   import { useNeededItemsSettingsDrawer } from '@/composables/useNeededItemsSettingsDrawer';
   type FilterType = 'all' | 'tasks' | 'hideout' | 'completed';
   type ViewMode = 'list' | 'grid';
@@ -249,7 +248,6 @@
   };
   const handleClose = () => {
     close();
-    if (!isOverlayMode.value) return;
     nextTick(() => {
       restoreTriggerFocus();
     });

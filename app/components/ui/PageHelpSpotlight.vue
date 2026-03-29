@@ -217,10 +217,11 @@
   const isFirstStep = computed(() => currentStepIndex.value === 0);
   const isLastStep = computed(() => currentStepIndex.value === props.steps.length - 1);
   const isOverlayMode = computed(() => true);
-  const { trapFocus } = useOverlayFocusTrap({
+  const { restoreTriggerFocus, trapFocus } = useOverlayFocusTrap({
     containerRef: panelRef,
     isOverlayMode,
   });
+  let didRestoreTriggerFocus = false;
   const clamp = (value: number, min: number, max: number) => {
     if (max < min) return min;
     return Math.min(Math.max(value, min), max);
@@ -509,7 +510,13 @@
     queuePositionUpdate();
     scheduleFollowUpPositionUpdates();
   };
+  const restoreFocusToTrigger = () => {
+    if (didRestoreTriggerFocus) return;
+    didRestoreTriggerFocus = true;
+    restoreTriggerFocus();
+  };
   const emitClose = () => {
+    restoreFocusToTrigger();
     emit('close');
   };
   const advanceToNextStep = () => {
@@ -532,8 +539,10 @@
     const target = event.target;
     if (!(target instanceof Element)) return;
     if (!target.closest(currentStep.value.advanceOnSelector)) return;
+    const stepIndex = currentStepIndex.value;
     window.setTimeout(() => {
-      if (!props.steps[currentStepIndex.value]?.advanceOnSelector) return;
+      if (currentStepIndex.value !== stepIndex) return;
+      if (!props.steps[stepIndex]?.advanceOnSelector) return;
       advanceToNextStep();
     }, 0);
   };
@@ -664,6 +673,7 @@
   });
   onBeforeUnmount(() => {
     if (!import.meta.client) return;
+    restoreFocusToTrigger();
     document.removeEventListener('click', handleDocumentClick, true);
     document.removeEventListener('keydown', handleDocumentKeydown, true);
     document.removeEventListener('touchmove', handleBlockedScroll, true);
