@@ -1,3 +1,10 @@
+## [1.28.6](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.28.5...v1.28.6) (2026-04-03)
+
+
+### Bug Fixes
+
+* update bug-report page link to temp issue ([f59d422](https://github.com/tarkovtracker-org/TarkovTracker/commit/f59d42265efc5cdf47410eca9ca42a4758860ec3))
+
 ## [1.28.5](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.28.4...v1.28.5) (2026-03-29)
 
 
