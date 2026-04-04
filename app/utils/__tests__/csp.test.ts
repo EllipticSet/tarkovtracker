@@ -24,20 +24,14 @@ describe('nuxt.config CSP', () => {
     const connectSources = getConnectSrcSources({
       clientLogSinkUrl: 'https://logs.example.com/v1/collect',
       supabaseUrl: 'https://db.example.com/auth/v1',
-      teamGatewayUrl: 'https://team.example.com/edge/team',
-      tokenGatewayUrl: 'https://token.example.com/token/create',
     });
     expect(connectSources).toContain('https://assets.tarkov.dev');
     expect(connectSources).toContain('https://tarkovtracker.github.io');
     expect(connectSources).toContain('https://logs.example.com');
     expect(connectSources).toContain('https://db.example.com');
     expect(connectSources).toContain('wss://db.example.com');
-    expect(connectSources).toContain('https://team.example.com');
-    expect(connectSources).toContain('https://token.example.com');
     expect(connectSources).not.toContain('https://logs.example.com/v1/collect');
     expect(connectSources).not.toContain('https://db.example.com/auth/v1');
-    expect(connectSources).not.toContain('https://team.example.com/edge/team');
-    expect(connectSources).not.toContain('https://token.example.com/token/create');
   });
   it('allows remote https images for oauth avatars and map fallbacks', () => {
     const imageSources = getImgSrcSources();
@@ -49,8 +43,6 @@ describe('nuxt.config CSP', () => {
       clarityInstrumentationKey: 'abcdef1234',
       gaMeasurementId: 'G-ABCDEF1234',
       supabaseUrl: 'https://db.example.com/auth/v1',
-      teamGatewayUrl: 'https://team.example.com/edge/team',
-      tokenGatewayUrl: 'https://token.example.com/token/create',
     });
     expect(getDirectiveSources(csp, 'default-src')).toEqual(["'self'"]);
     expect(getDirectiveSources(csp, 'script-src')).toContain("'unsafe-inline'");
@@ -61,7 +53,6 @@ describe('nuxt.config CSP', () => {
     expect(getDirectiveSources(csp, 'script-src')).toContain('https://*.clarity.ms');
     expect(getDirectiveSources(csp, 'connect-src')).toContain('https://cloudflareinsights.com');
     expect(getDirectiveSources(csp, 'connect-src')).toContain('https://db.example.com');
-    expect(getDirectiveSources(csp, 'connect-src')).toContain('https://team.example.com');
     expect(getDirectiveSources(csp, 'img-src')).toContain('https:');
     expect(getDirectiveSources(csp, 'style-src')).toEqual([
       "'self'",

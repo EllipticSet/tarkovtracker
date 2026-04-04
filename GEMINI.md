@@ -26,7 +26,7 @@
   - `pages/` - File-based routing (kebab-case)
   - `server/api/` - Nitro server routes (proxies)
   - `locales/` - JSON5 locale files
-- `workers/` - Cloudflare Workers (`api-gateway`, `team-gateway`)
+- `workers/` - Cloudflare Workers (`api-gateway`)
 - `supabase/` - Database migrations and Edge Functions
 - `docs/` - Documentation
 

@@ -55,8 +55,6 @@ VITE_SUPABASE_ANON_KEY=your_anon_key_here
 
 # App Configuration
 NUXT_PUBLIC_APP_URL=http://localhost:3000
-NUXT_PUBLIC_TEAM_GATEWAY_URL=http://localhost:8787
-NUXT_PUBLIC_TOKEN_GATEWAY_URL=http://localhost:8788
 
 # Cloudflare Workers (for local development)
 CLOUDFLARE_ACCOUNT_ID=your_account_id_here

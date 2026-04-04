@@ -30,7 +30,7 @@ app/                    # Nuxt 4 source directory
 ├── utils/              # Utility functions
 └── types/              # TypeScript type definitions
 supabase/functions/     # Deno-based Edge Functions (different lint rules)
-workers/                # Cloudflare Workers (api-gateway, team-gateway)
+workers/                # Cloudflare Workers (api-gateway)
 ```
 
 ## Commands
@@ -130,7 +130,7 @@ The app tracks PvP and PvE progress separately. Always consider both modes when 
 
 ### Team System
 
-Real-time sync via Supabase Broadcast with gateway-tier architecture.
+Real-time sync via Supabase Broadcast. Team/token mutations run through Supabase Edge Functions.
 
 ### XP System
 

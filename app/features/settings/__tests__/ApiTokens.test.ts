@@ -14,6 +14,11 @@ const mockSupabaseUser = reactive({
 const mockToast = {
   add: vi.fn(),
 };
+const runtimeConfig = {
+  public: {
+    allowDirectTokenCreateFallback: false,
+  },
+};
 const pendingLoads = new Map<
   string,
   (value: {
@@ -40,13 +45,12 @@ const mockInsertSingle = vi.fn();
 const mockFrom = vi.fn(() => {
   let currentUserId = '';
   const table = {
-    delete: vi.fn(() => table),
-    eq: vi.fn((_column: string, userId: string) => {
-      currentUserId = userId;
-      return table;
-    }),
     insert: vi.fn((payload: Record<string, unknown>) => {
       mockInsert(payload);
+      return table;
+    }),
+    eq: vi.fn((_column: string, userId: string) => {
+      currentUserId = userId;
       return table;
     }),
     order: vi.fn(
@@ -72,6 +76,7 @@ mockNuxtImport('useNuxtApp', () => () => ({
     client: mockSupabaseClient,
   },
 }));
+mockNuxtImport('useRuntimeConfig', () => () => runtimeConfig);
 mockNuxtImport('useToast', () => () => mockToast);
 vi.mock('@/composables/api/useEdgeFunctions', () => ({
   useEdgeFunctions: () => ({
@@ -179,6 +184,7 @@ describe('ApiTokens', () => {
     vi.spyOn(globalThis.crypto.subtle, 'digest').mockResolvedValue(new Uint8Array(32).buffer);
     pendingLoads.clear();
     pendingCreates.clear();
+    runtimeConfig.public.allowDirectTokenCreateFallback = false;
     mockSupabaseUser.loggedIn = true;
     mockSupabaseUser.id = 'user-a';
     mockCreateToken.mockReset();
@@ -258,40 +264,48 @@ describe('ApiTokens', () => {
       )
     ).toHaveLength(1);
   });
-  it('falls back to direct insert when the gateway throws a statusless error', async () => {
+  it('shows an error instead of bypassing the function when token creation throws a statusless error', async () => {
     mockCreateToken.mockRejectedValueOnce(new Error('Internal server error'));
-    mockInsertSingle.mockResolvedValueOnce({
-      data: { token_id: 'user-a-direct-token' },
-      error: null,
-    });
     const wrapper = await createWrapper();
     await flushPromises();
     await clickButton(wrapper, 'page.settings.card.apitokens.new_token_expand');
     await clickButton(wrapper, 'page.settings.card.apitokens.submit_new_token');
     await flushPromises();
     expect(mockCreateToken).toHaveBeenCalledTimes(1);
-    expect(mockInsert).toHaveBeenCalledTimes(1);
-    expect(mockInsert.mock.calls[0]?.[0]).toMatchObject({
-      game_mode: 'pvp',
-      note: null,
-      permissions: ['GP'],
-      user_id: 'user-a',
-    });
-    resolveLoad('user-a', 'Direct Token');
-    await flushPromises();
     expect(
       mockToast.add.mock.calls.filter(
         ([payload]) => payload.title === 'page.settings.card.apitokens.create_token_success'
       )
-    ).toHaveLength(1);
+    ).toHaveLength(0);
     expect(
       mockToast.add.mock.calls.filter(
         ([payload]) => payload.title === 'page.settings.card.apitokens.create_token_error'
       )
-    ).toHaveLength(0);
-    expect(wrapper.text()).toContain('Direct Token');
+    ).toHaveLength(1);
+    expect(wrapper.text()).not.toContain('Direct Token');
   });
-  it('falls back to direct insert when token-create is unavailable', async () => {
+  it('shows an error instead of direct inserting when token-create is unavailable', async () => {
+    mockCreateToken.mockRejectedValueOnce({ status: 404, data: { message: 'Not found' } });
+    const wrapper = await createWrapper();
+    await flushPromises();
+    await clickButton(wrapper, 'page.settings.card.apitokens.new_token_expand');
+    await clickButton(wrapper, 'page.settings.card.apitokens.submit_new_token');
+    await flushPromises();
+    expect(mockCreateToken).toHaveBeenCalledTimes(1);
+    expect(
+      mockToast.add.mock.calls.filter(
+        ([payload]) => payload.title === 'page.settings.card.apitokens.create_token_success'
+      )
+    ).toHaveLength(0);
+    expect(
+      mockToast.add.mock.calls.filter(
+        ([payload]) => payload.title === 'page.settings.card.apitokens.create_token_error'
+      )
+    ).toHaveLength(1);
+    expect(wrapper.text()).not.toContain('Fallback Token');
+  });
+  it('allows direct insert fallback when explicitly enabled and token-create is unavailable', async () => {
+    runtimeConfig.public.allowDirectTokenCreateFallback = true;
     mockCreateToken.mockRejectedValueOnce({ status: 404, data: { message: 'Not found' } });
     mockInsertSingle.mockResolvedValueOnce({
       data: { token_id: 'user-a-direct-token' },
@@ -311,11 +325,6 @@ describe('ApiTokens', () => {
         ([payload]) => payload.title === 'page.settings.card.apitokens.create_token_success'
       )
     ).toHaveLength(1);
-    expect(
-      mockToast.add.mock.calls.filter(
-        ([payload]) => payload.title === 'page.settings.card.apitokens.create_token_error'
-      )
-    ).toHaveLength(0);
     expect(wrapper.text()).toContain('Fallback Token');
   });
 });

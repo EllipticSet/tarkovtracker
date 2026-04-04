@@ -4,8 +4,6 @@ export type ContentSecurityPolicyOptions = {
   clarityInstrumentationKey?: string;
   gaMeasurementId?: string;
   supabaseUrl?: string;
-  teamGatewayUrl?: string;
-  tokenGatewayUrl?: string;
 };
 const GITHUB_IMAGE_ORIGINS = ['https://avatars.githubusercontent.com', 'https://github.com'];
 const hasConfiguredValue = (value: string | undefined): boolean => Boolean(value?.trim());
@@ -89,8 +87,6 @@ export const getConnectSrcSources = (options: ContentSecurityPolicyOptions = {})
     getCspOrigin(options.clientLogSinkUrl),
     getCspOrigin(options.supabaseUrl),
     getWebSocketCspOrigin(options.supabaseUrl),
-    getCspOrigin(options.teamGatewayUrl),
-    getCspOrigin(options.tokenGatewayUrl),
   ]);
 };
 export const getImgSrcSources = (options: ContentSecurityPolicyOptions = {}): string[] => {

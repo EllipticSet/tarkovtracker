@@ -6,7 +6,7 @@ This is the consolidated source of truth for the TarkovTracker Nuxt 4 applicatio
 
 - **Framework**: Nuxt ^4.2.1 (SPA mode, `app/` directory, Node 22).
 - **Frontend**: Vue 3 SFCs (`<script setup lang="ts">`), Pinia state, @nuxt/ui v4, Tailwind CSS v4.
-- **Backend**: Supabase (Auth, DB, Realtime) + Cloudflare Workers (Gateway).
+- **Backend**: Supabase (Auth, DB, Realtime) + Cloudflare Workers (public API gateway).
 - **Styling**: Strictly use Tailwind v4 theme layer (`@theme {}`). No hex colors or legacy UI patterns.
 - **Philosophy**: Pragmatic flat structure. Shallow nesting (e.g., [`app/shell/`](../app/shell/)). Avoid unnecessary abstractions.
 - **Conventions**: 2-space indent, 100-char width. Group imports (builtin → external → internal). Use `@/` aliases.
@@ -22,20 +22,20 @@ This is the consolidated source of truth for the TarkovTracker Nuxt 4 applicatio
 
 ## 3. Key Feature Architectures
 
-- **Team System**: Gateway-tier architecture (Cloudflare Worker + Supabase Edge Functions). Real-time updates via Supabase Broadcast (<200ms). Teammate profiles fetched via server route using service roles to bypass RLS.
+- **Team System**: Supabase Edge Functions handle team/token mutations with per-user rate limits. Real-time updates via Supabase Broadcast (<200ms). Teammate profiles are fetched via a Nitro server route using service roles to bypass RLS.
 - **XP & Level System**: Dynamic calculation from tasks. Stores `xpOffset` (difference between calculated and actual XP) to maintain accuracy across manual adjustments.
 - **i18n**: 6 languages managed in [`app/locales/*.json5`](../app/locales/). Missing keys fallback to raw strings.
 
 ## 4. Security & Operations
 
-- **Security**: Origin-check middleware (`tarkovtracker.org`) + Gateway rate limiting (IP+User). HMAC signing for critical endpoints.
+- **Security**: Origin-check middleware (`tarkovtracker.org`) + per-user mutation rate limiting in Supabase Edge Functions. Public API rate limiting stays at the Cloudflare edge. HMAC signing for critical endpoints.
 - **Commands**: `npm run dev` (dev), `npm run build` (prod), `npx vitest` (test), `npm run lint` (lint).
 - **Runbook**: [`docs/runbook.md`](./runbook.md) contains required env vars, deploy checks, and incident recovery.
 - **Deployment**:
   - Frontend: Automated via Cloudflare Pages on push.
   - Functions: `supabase functions deploy [name]`.
-  - Gateway: `cd workers/team-gateway && npx wrangler deploy`.
-- **Troubleshooting**: Check Supabase Dashboard for Edge Function logs. Gateway implements retries with exponential backoff for cold starts (1-3s).
+  - Public API worker: `cd workers/api-gateway && npx wrangler deploy`.
+- **Troubleshooting**: Check Supabase Dashboard for Edge Function logs and Cloudflare logs for the public API worker.
 
 --- DO NOT TOUCH ANY OF THIS FILE CONENT BELOW HERE, IT IS MANUALLY MAINTAINED ---
 

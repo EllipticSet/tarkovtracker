@@ -8,6 +8,7 @@ import {
   createSuccessResponse,
   type AuthSuccess
 } from "../_shared/auth.ts"
+import { enforceUserMutationRateLimit } from "../_shared/rate-limit.ts"
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 const LEAVE_COOLDOWN_MINUTES = 5
 const VALID_GAME_MODES = ["pvp", "pve"] as const
@@ -26,6 +27,8 @@ serve(async (req) => {
       return createErrorResponse(authResult.error, authResult.status, req)
     }
     const { user, supabase } = authResult as AuthSuccess
+    const rateLimitResponse = await enforceUserMutationRateLimit(req, supabase, user.id, "team-leave")
+    if (rateLimitResponse) return rateLimitResponse
     // Parse and validate request body
     const body = await req.json()
     const fieldsError = validateRequiredFields(req, body, ["teamId"])

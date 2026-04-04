@@ -83,7 +83,3 @@ jobs:
       - name: Test api-gateway
         if: hashFiles('workers/api-gateway/package.json') != ''
         run: npm run test:api-gateway
-
-      - name: Validate team-gateway
-        if: hashFiles('workers/team-gateway/src/**/*.ts', 'workers/team-gateway/tsconfig.json', 'workers/team-gateway/wrangler.toml') != ''
-        run: npx tsc --project workers/team-gateway/tsconfig.json --noEmit

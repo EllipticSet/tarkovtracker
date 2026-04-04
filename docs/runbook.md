@@ -35,7 +35,6 @@
 2. Confirm Cloudflare Pages and Cloudflare Workers Git deployments completed for `main`.
 3. Confirm workers are serving the expected revision:
    - `workers/api-gateway`
-   - `workers/team-gateway`
 4. Smoke test:
    - `https://tarkovtracker.org`
    - `https://api.tarkovtracker.org/health`

@@ -215,11 +215,9 @@ Push to `main` triggers:
 # Local deployment (run from project root: /home/lab/TarkovTracker or equivalent)
 npm run build
 cd workers/api-gateway && npx wrangler deploy
-cd "$OLDPWD" && cd workers/team-gateway && npx wrangler deploy
 ```
 
 > **Note:** All local deployment commands assume you are in the project root directory.
-> The `cd "$OLDPWD"` returns to the previous directory before switching to the next worker.
 
 ## Monitoring & Notifications
 

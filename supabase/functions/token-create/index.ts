@@ -7,6 +7,7 @@ import {
   validateMethod,
   type AuthSuccess,
 } from "../_shared/auth.ts"
+import { enforceUserMutationRateLimit } from "../_shared/rate-limit.ts"
 
 const generateToken = (gameMode: string) => {
   const bytes = crypto.getRandomValues(new Uint8Array(9))
@@ -36,6 +37,8 @@ serve(async (req) => {
       return createErrorResponse(authResult.error, authResult.status, req)
     }
     const { user, supabase } = authResult as AuthSuccess
+    const rateLimitResponse = await enforceUserMutationRateLimit(req, supabase, user.id, "token-create")
+    if (rateLimitResponse) return rateLimitResponse
 
     let body: Record<string, unknown> = {}
     try {

@@ -39,12 +39,9 @@ Copy `.env.example` to `.env` and fill in your values:
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anonymous_key
 
-# Optional: API gateway URLs (for team features)
-# NUXT_PUBLIC_TEAM_GATEWAY_URL=
-# NUXT_PUBLIC_TOKEN_GATEWAY_URL=
-
 # Optional: App configuration
 # NUXT_PUBLIC_APP_URL=http://localhost:3000
+# NUXT_PUBLIC_ALLOW_DIRECT_TOKEN_CREATE_FALLBACK=false
 # NUXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 # NUXT_PUBLIC_CLARITY_PROJECT_ID=xxxxxxxxxx
 ```
@@ -57,19 +54,23 @@ control. That opt-in state is managed in `app/composables/useAnalyticsConsent.ts
 `app/plugins/03.analytics-consent-mode.client.ts` keeps analytics consent mode denied until the
 user accepts.
 
+`NUXT_PUBLIC_ALLOW_DIRECT_TOKEN_CREATE_FALLBACK` is disabled by default and should stay off in
+production. It exists only for controlled local/self-hosted or staggered rollout cases where the
+`token-create` Edge Function is temporarily unavailable and you intentionally accept bypassing
+function-level rate limiting for token creation.
+
 ## Cloudflare Workers
 
-The project uses two Cloudflare Workers, each with a Durable Object binding for rate limiting:
+The project uses one Cloudflare Worker for the public API surface:
 
 - `workers/api-gateway` — API request gateway
   - `API_GATEWAY_LIMITER` (Durable Object)
-- `workers/team-gateway` — Team feature gateway
-  - `TEAM_GATEWAY_LIMITER` (Durable Object)
 
 ## Server API Runtime Notes
 
 - `app/server/api/team/members.ts` uses in-memory Maps for response caching and rate limiting.
 - `app/server/api/profile/[userId]/[mode].get.ts` uses in-memory Maps `sharedProfileRateLimiter` and `sharedProfileCache`.
+- Team and token mutations are rate-limited inside Supabase Edge Functions on a per-user basis.
 - In-memory Maps are local to each running instance and are not shared across serverless/horizontal deployments.
 - For production-wide consistency across both endpoints, use a distributed backend (for example Redis or Cloudflare KV)
   for rate limiting and caching.
@@ -126,7 +127,7 @@ npm run preview
 - `app/composables/` - Reusable composition functions
 - `app/pages/` - File-based routing
 - `app/server/api/` - Nuxt server routes for API proxying
-- `workers/` - Cloudflare Workers (api-gateway, team-gateway)
+- `workers/` - Cloudflare Workers (api-gateway)
 - `docs/` - Project documentation and migration guides
 
 ## Documentation

@@ -55,8 +55,6 @@ const cspRouteRules = buildContentSecurityPolicyRouteRules({
     process.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_MEASUREMENT_ID ||
     '',
   supabaseUrl: PUBLIC_SUPABASE_URL,
-  teamGatewayUrl: process.env.NUXT_PUBLIC_TEAM_GATEWAY_URL,
-  tokenGatewayUrl: process.env.NUXT_PUBLIC_TOKEN_GATEWAY_URL,
 });
 const webApplicationSchema = {
   '@context': 'https://schema.org',
@@ -171,8 +169,8 @@ export default defineNuxtConfig({
       supabaseAnonKey: PUBLIC_SUPABASE_ANON_KEY,
       supabaseUrl: PUBLIC_SUPABASE_URL,
       clientLogSinkUrl: process.env.NUXT_PUBLIC_CLIENT_LOG_SINK_URL || '/api/logs/client',
-      teamGatewayUrl: process.env.NUXT_PUBLIC_TEAM_GATEWAY_URL || '',
-      tokenGatewayUrl: process.env.NUXT_PUBLIC_TOKEN_GATEWAY_URL || '',
+      allowDirectTokenCreateFallback:
+        process.env.NUXT_PUBLIC_ALLOW_DIRECT_TOKEN_CREATE_FALLBACK === 'true',
       adminWatchTimeoutMs: Number(process.env.ADMIN_WATCH_TIMEOUT_MS || '5000') || 5000,
       githubOwner: process.env.GITHUB_OWNER || 'tarkovtracker-org',
       githubRepo: process.env.GITHUB_REPO || 'TarkovTracker',

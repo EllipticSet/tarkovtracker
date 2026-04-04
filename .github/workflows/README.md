@@ -7,7 +7,7 @@ Automated CI/CD and maintenance workflows for TarkovTracker.
 ### CI (`ci.yml`)
 
 **Trigger:** Push to main/develop/wip branches, PRs
-**Jobs:** `Validate` (lint, typecheck, format, test, build), `Workers` (validate both workers)
+**Jobs:** `Validate` (lint, typecheck, format, test, build), `Workers` (validate api-gateway)
 
 ### Security (`security.yml`)
 

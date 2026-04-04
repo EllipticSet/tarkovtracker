@@ -1,78 +1,52 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeadersFor } from '../_shared/cors.ts';
-
-const supabaseUrl =
-  Deno.env.get('SUPABASE_URL') ||
-  (() => {
-    throw new Error('Missing SUPABASE_URL env');
-  })();
-const supabaseServiceKey =
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ||
-  (() => {
-    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY env');
-  })();
-// UUID format check (case-insensitive) for token identifiers.
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-const jsonResponse = (body: { success: boolean; message: string }, status: number, req: Request) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeadersFor(req), 'Content-Type': 'application/json' },
-  });
+import {
+  authenticateUser,
+  createErrorResponse,
+  createSuccessResponse,
+  handleCorsPreflight,
+  validateMethod,
+  validateRequiredFields,
+  validateUUIDs,
+  type AuthSuccess,
+} from '../_shared/auth.ts';
+import { enforceUserMutationRateLimit } from '../_shared/rate-limit.ts';
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return jsonResponse({ success: true, message: 'ok' }, 200, req);
-  }
+  const corsResponse = handleCorsPreflight(req);
+  if (corsResponse) return corsResponse;
 
   try {
-    // Only allow DELETE method
-    if (req.method !== 'DELETE') {
-      return jsonResponse({ success: false, message: 'Method not allowed' }, 405, req);
+    const methodError = validateMethod(req, ['DELETE']);
+    if (methodError) return methodError;
+
+    const authResult = await authenticateUser(req);
+    if ('error' in authResult) {
+      return createErrorResponse(authResult.error, authResult.status, req);
     }
 
-    // Get authorization header to verify user identity
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return jsonResponse(
-        { success: false, message: 'Missing or invalid authorization header' },
-        401,
-        req
-      );
-    }
+    const { user, supabase } = authResult as AuthSuccess;
+    const rateLimitResponse = await enforceUserMutationRateLimit(
+      req,
+      supabase,
+      user.id,
+      'token-revoke'
+    );
+    if (rateLimitResponse) return rateLimitResponse;
 
-    // Get token from request body
-    let tokenId: string | undefined;
+    let body: Record<string, unknown> = {};
     try {
-      ({ tokenId } = (await req.json()) as { tokenId?: string });
+      body = (await req.json()) as Record<string, unknown>;
     } catch {
-      return jsonResponse({ success: false, message: 'Malformed JSON' }, 400, req);
-    }
-    if (!tokenId) {
-      return jsonResponse({ success: false, message: 'Token ID is required' }, 400, req);
-    }
-    // Validate UUID format
-    if (!UUID_REGEX.test(tokenId)) {
-      return jsonResponse({ success: false, message: 'Invalid token ID format' }, 400, req);
+      return createErrorResponse('Malformed JSON', 400, req);
     }
 
-    // Create Supabase client with service role key for admin operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const fieldsError = validateRequiredFields(req, body, ['tokenId']);
+    if (fieldsError) return fieldsError;
 
-    // Verify user JWT token
-    const token = authHeader.replace('Bearer ', '');
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser(token);
+    const uuidError = validateUUIDs(req, body, ['tokenId']);
+    if (uuidError) return uuidError;
 
-    if (authError || !user) {
-      return jsonResponse({ success: false, message: 'Invalid authentication token' }, 401, req);
-    }
-
-    // Delete the token (only if it belongs to the authenticated user)
+    const { tokenId } = body as { tokenId: string };
     const { error: deleteError } = await supabase
       .from('api_tokens')
       .delete()
@@ -81,12 +55,16 @@ serve(async (req) => {
 
     if (deleteError) {
       console.error('Token deletion failed:', deleteError);
-      return jsonResponse({ success: false, message: 'Failed to revoke token' }, 500, req);
+      return createErrorResponse('Failed to revoke token', 500, req);
     }
 
-    return jsonResponse({ success: true, message: 'Token revoked successfully' }, 200, req);
+    return createSuccessResponse(
+      { success: true, message: 'Token revoked successfully' },
+      200,
+      req
+    );
   } catch (error) {
     console.error('Token revoke error:', error);
-    return jsonResponse({ success: false, message: 'Internal server error' }, 500, req);
+    return createErrorResponse('Internal server error', 500, req);
   }
 });
