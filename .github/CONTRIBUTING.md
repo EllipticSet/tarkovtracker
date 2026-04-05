@@ -23,7 +23,7 @@ Please be respectful and constructive in all interactions. We're building a tool
 2. **Install dependencies**: `npm install`
 3. **Set up environment**: Copy `.env.example` to `.env` and add your Supabase credentials
 4. **Start dev server**: `npm run dev`
-5. **Read CLAUDE.md** for detailed development guidelines
+5. **Read AGENTS.md** for detailed development guidelines
 
 ## Development Workflow
 
@@ -106,8 +106,7 @@ Issues are automatically labeled based on template selection. Maintainers will a
 
 3. **Update documentation**
    - Update README if adding features
-   - Add JSDoc comments for new functions
-   - Update CLAUDE.md if changing architecture
+   - Update AGENTS.md if changing architecture or repo-wide agent guidance
 
 ### PR Requirements
 
@@ -185,7 +184,7 @@ Issues move automatically based on actions:
 
 ## Coding Standards
 
-**See CLAUDE.md for comprehensive coding standards. Key points:**
+**See AGENTS.md for comprehensive coding standards. Key points:**
 
 ### TypeScript & Vue
 - Use `<script setup lang="ts">` with TypeScript
@@ -225,6 +224,21 @@ Issues move automatically based on actions:
 ## Guidelines for AI Coding Agents
 
 When working with AI coding assistants on this project:
+
+### Context Files
+- `AGENTS.md` is the single source of truth for repo-wide agent instructions.
+- `CLAUDE.md` is intentionally a thin shim that imports `AGENTS.md` for Claude Code.
+- `GEMINI.md` is intentionally not tracked. If you use Gemini CLI, point it at `AGENTS.md` with `.gemini/settings.json`:
+
+```json
+{
+  "context": {
+    "fileName": ["AGENTS.md"]
+  }
+}
+```
+
+- Do not configure Gemini CLI to load both `AGENTS.md` and `GEMINI.md` if one imports the other, or instructions may be duplicated.
 
 ### Ask Before Acting
 - **Clarify complex or ambiguous requests** before proceeding—don't assume intent

@@ -10,8 +10,8 @@
   },
   "devDependencies": {
     "@apidevtools/swagger-parser": "^12.1.0",
-    "@cloudflare/workers-types": "^4.20260402.1",
-    "@types/node": "^25.5.0",
+    "@cloudflare/workers-types": "^4.20260405.1",
+    "@types/node": "^25.5.2",
     "openapi-types": "^12.1.3",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2",

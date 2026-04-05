@@ -1,14 +1,14 @@
 {
   "__pinnedNotes": {
     "@vueuse/core": "Previously pinned to 13.9.0 due to Nuxt/@nuxt/ui/reka-ui compatibility; updated to ^14.1.0 after upgrading Nuxt/@nuxt/ui.",
-    "fast-xml-parser": "Pinned fast-xml-parser to ^5.3.6 on 2026-02-18 to stay on the patched v5 line and avoid potential v6 API regressions in @nuxtjs/sitemap dependency paths; remediation: remove this override after @nuxtjs/sitemap officially supports fast-xml-parser v6 and confirm sitemap generation in CI."
+    "fast-xml-parser": "Pinned fast-xml-parser to the patched v5 line on 2026-02-18 to avoid potential v6 API regressions in @nuxtjs/sitemap dependency paths; remediation: remove this override after @nuxtjs/sitemap officially supports fast-xml-parser v6 and confirm sitemap generation in CI."
   },
   "version": "1.28.6",
   "dependencies": {
     "@iconify-json/mdi": "^1.2.3",
     "@nuxt/image": "^2.0.0",
-    "@nuxt/ui": "^4.6.0",
-    "@nuxtjs/i18n": "^10.2.3",
+    "@nuxt/ui": "^4.6.1",
+    "@nuxtjs/i18n": "^10.2.4",
     "@nuxtjs/sitemap": "^8.0.11",
     "@pinia/nuxt": "^0.11.3",
     "@supabase/supabase-js": "^2.101.1",
@@ -17,49 +17,50 @@
     "@vue-flow/minimap": "^1.5.4",
     "@vueuse/core": "^14.2.1",
     "fflate": "^0.8.2",
-    "h3": "^1.15.10",
+    "h3": "^1.15.11",
     "ipaddr.js": "^2.3.0",
     "leaflet": "^1.9.4",
     "lru-cache": "^11.2.7",
-    "nuxt": "^4.3.1",
+    "nuxt": "^4.4.2",
     "ofetch": "^1.5.1",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
-    "vue": "^3.5.28",
-    "vue-i18n": "^11.2.8",
+    "vue": "^3.5.32",
+    "vue-i18n": "^11.3.0",
     "vue-router": "^5.0.4"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260402.1",
-    "@commitlint/cli": "^20.4.2",
-    "@commitlint/config-conventional": "^20.4.2",
-    "@nuxt/eslint": "^1.15.1",
+    "@cloudflare/workers-types": "^4.20260405.1",
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "@nuxt/eslint": "^1.15.2",
     "@nuxt/test-utils": "^4.0.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/npm": "^13.1.5",
-    "@tailwindcss/postcss": "^4.2.0",
+    "@tailwindcss/postcss": "^4.2.2",
     "@types/leaflet": "^1.9.21",
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.5.2",
     "@vitest/coverage-v8": "^4.1.2",
     "@vitest/ui": "^4.1.2",
     "@vue/test-utils": "^2.4.6",
-    "autoprefixer": "^10.4.24",
-    "defu": "^6.1.4",
-    "eslint": "^10.1.0",
-    "eslint-plugin-import-x": "^4.16.1",
+    "autoprefixer": "^10.4.27",
+    "defu": "^6.1.6",
+    "eslint": "^10.2.0",
+    "eslint-plugin-import-x": "^4.16.2",
     "fake-indexeddb": "^6.2.5",
     "happy-dom": "^20.8.9",
     "husky": "^9.1.7",
     "json5": "^2.2.3",
-    "lint-staged": "^16.2.7",
-    "postcss": "^8.5.6",
+    "lint-staged": "^16.4.0",
+    "postcss": "^8.5.8",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "semantic-release": "^25.0.3",
     "serve": "^14.2.6",
-    "supabase": "^2.84.7",
-    "tailwindcss": "^4.2.0",
+    "supabase": "^2.84.10",
+    "taze": "^19.11.0",
+    "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
     "vitest": "^4.1.2",
     "vue-tsc": "^3.2.6",
@@ -72,36 +73,29 @@
   },
   "name": "tarkovtracker-nuxt",
   "overrides": {
+    "npm": {
+      ".": "^11.12.1",
+      "picomatch": "^4.0.4"
+    },
     "@tiptap/core": "3.14.0",
     "@tiptap/pm": "3.14.0",
-    "@vue/test-utils": {
-      "brace-expansion": "^2.0.3"
+    "serve": {
+      "brace-expansion": "^1.1.13"
     },
+    "fast-xml-parser": "^5.5.10",
     "@nuxt/test-utils": {
       "h3-next": "npm:h3@2.0.1-rc.20",
-      "srvx": "^0.11.13"
+      "srvx": "^0.11.15"
     },
-    "eslint": {
-      "brace-expansion": "^5.0.5"
-    },
-    "fast-xml-parser": "^5.3.7",
     "handlebars": "^4.7.9",
     "lodash": "^4.18.1",
     "lodash-es": "^4.18.1",
     "node-forge": "^1.4.0",
-    "npm": {
-      ".": "^11.12.1",
-      "brace-expansion": "^5.0.5",
-      "picomatch": "^4.0.4"
-    },
-    "tar": "^7.5.9",
-    "serialize-javascript": "^7.0.3",
-    "serve": {
-      "brace-expansion": "^1.1.13"
-    },
+    "serialize-javascript": "^7.0.5",
+    "tar": "^7.5.13",
     "yaml": "^2.8.3"
   },
-  "packageManager": "npm@11.8.0",
+  "packageManager": "npm@11.12.1",
   "private": true,
   "scripts": {
     "build": "nuxt build",

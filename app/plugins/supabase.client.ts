@@ -174,9 +174,18 @@ export default defineNuxtPlugin({
     const stub = buildStub();
     let initPromise: Promise<void> | null = null;
     let supabaseClient: SupabaseClient | null = null;
-    const hasOAuthHash = () => {
-      const hash = window.location.hash || '';
-      return hash.includes('access_token') || hash.includes('refresh_token');
+    const hasOAuthCallbackParams = () => {
+      const searchParams = new URLSearchParams(window.location.search || '');
+      if (searchParams.has('code') || searchParams.has('error')) {
+        return true;
+      }
+      const hash = window.location.hash.startsWith('#')
+        ? window.location.hash.slice(1)
+        : window.location.hash;
+      const hashParams = new URLSearchParams(hash.startsWith('?') ? hash.slice(1) : hash);
+      return (
+        hashParams.has('access_token') || hashParams.has('refresh_token') || hashParams.has('error')
+      );
     };
     const hasStoredSession = () => {
       try {
@@ -198,14 +207,19 @@ export default defineNuxtPlugin({
       if (!initPromise) {
         initPromise = (async () => {
           const { createClient } = await import('@supabase/supabase-js');
-          const client = createClient(supabaseUrl, supabaseKey);
+          const client = createClient(supabaseUrl, supabaseKey, {
+            auth: {
+              detectSessionInUrl: true,
+              flowType: 'pkce',
+            },
+          });
           supabaseClient = client;
           api.client = client;
-          const sessionResult = await client.auth.getSession();
-          hydrateFromSession(sessionResult.data?.session ?? null);
           client.auth.onAuthStateChange((_event, session) => {
             hydrateFromSession(session);
           });
+          const sessionResult = await client.auth.getSession();
+          hydrateFromSession(sessionResult.data?.session ?? null);
         })()
           .catch((error) => {
             logger.error('[Supabase] Failed to initialize client', error);
@@ -219,6 +233,14 @@ export default defineNuxtPlugin({
     };
     const initializeClientInBackground = () => {
       void ensureClientInitialized().catch(() => {});
+    };
+    const ready = async () => {
+      await ensureClientInitialized();
+      if (!supabaseClient) {
+        return;
+      }
+      const sessionResult = await supabaseClient.auth.getSession();
+      hydrateFromSession(sessionResult.data?.session ?? null);
     };
     const signInWithOAuth = async (
       provider: OAuthProvider,
@@ -253,10 +275,10 @@ export default defineNuxtPlugin({
       isOfflineMode: false,
       signInWithOAuth,
       signOut,
-      ready: ensureClientInitialized,
+      ready,
     });
-    if (hasOAuthHash() || hasStoredSession()) {
-      await ensureClientInitialized();
+    if (hasOAuthCallbackParams() || hasStoredSession()) {
+      await ready();
     } else {
       initializeClientInBackground();
     }

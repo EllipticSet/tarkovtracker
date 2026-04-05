@@ -52,7 +52,7 @@
 
 ## Checklist
 <!-- Mark completed items with an 'x' -->
-- [ ] My code follows the project's coding conventions (see CLAUDE.md)
+- [ ] My code follows the project's coding conventions (see AGENTS.md)
 - [ ] I have performed a self-review of my code
 - [ ] I have commented my code where necessary
 - [ ] I have updated relevant documentation

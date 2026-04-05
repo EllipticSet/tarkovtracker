@@ -769,6 +769,7 @@
           open_api_documentation: 'OpenAPI documentation',
           create_token_success: 'Successfully created a new API token.',
           create_token_error: 'Failed to create a new API token.',
+          load_tokens_error: 'Failed to load API tokens.',
           copy_failed: 'Failed to copy token.',
           copy_token: 'Copy token',
           token_created: 'Token created',
@@ -787,6 +788,11 @@
           token_value_unavailable: 'Token value display unavailable',
           token_value_unavailable_desc: 'Your current API does not expose token values for existing tokens.',
           revoke_button: 'Revoke',
+          report: {
+            load_failed: 'API token load failed',
+            create_failed: 'API token creation failed',
+            revoke_failed: 'API token revoke failed',
+          },
           list: {
             created: 'Created',
             last_used_tooltip: 'Last used: {value}',
@@ -899,6 +905,8 @@
       popup_blocked_description: 'Your browser blocked the sign-in window. Redirecting you now...',
       error_title: 'Sign-in failed',
       error_description: 'Authentication was canceled or failed. Please try again.',
+      success_title: 'Signed in',
+      success_description: 'Signed in with {provider}.',
       login_options: 'Login options',
     },
     profile: {

@@ -92,16 +92,22 @@ describe('useOAuthLogin', () => {
     const oauthError = new Error('oauth failed');
     mockSignInWithOAuth.mockRejectedValueOnce(oauthError);
     const openPopupOrRedirect = vi.fn(() => true);
+    const onError = vi.fn();
     const loading = createLoadingState();
     const { useOAuthLogin } = await import('@/composables/useOAuthLogin');
     const { signInWithProvider } = useOAuthLogin({
       buildCallbackUrl,
       loading,
+      onError,
       openPopupOrRedirect,
     });
     await signInWithProvider('twitch');
     expect(openPopupOrRedirect).not.toHaveBeenCalled();
     expect(loading.value.twitch).toBe(false);
+    expect(onError).toHaveBeenCalledWith({
+      error: oauthError,
+      provider: 'twitch',
+    });
     expect(trackLoginFailedMock).toHaveBeenCalledWith('twitch', oauthError);
     expect(loggerMock.error).toHaveBeenCalledWith('[Login] Twitch sign in error:', oauthError);
   });

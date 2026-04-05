@@ -188,7 +188,8 @@
   </div>
 </template>
 <script setup lang="ts">
-  import { useOAuthLogin } from '@/composables/useOAuthLogin';
+  import { useDiagnosticToast } from '@/composables/useDiagnosticToast';
+  import { toProviderLabel, useOAuthLogin } from '@/composables/useOAuthLogin';
   import { logger } from '@/utils/logger';
   import { sanitizeInternalRedirect } from '@/utils/redirect';
   useSeoMeta({
@@ -207,6 +208,8 @@
   const activePopupCleanups = new Set<() => void>();
   let loginPageUnmounted = false;
   const route = useRoute();
+  const { t } = useI18n({ useScope: 'global' });
+  const { showErrorToast, showSuccessToast } = useDiagnosticToast();
   const buildCallbackUrl = () => {
     const config = useRuntimeConfig();
     const origin = typeof window !== 'undefined' ? window.location.origin : config.public.appUrl;
@@ -218,6 +221,39 @@
     return callbackUrl.toString();
   };
   const toast = useToast();
+  const showLoginErrorToast = ({
+    provider,
+    error,
+    description,
+    report,
+    stage,
+  }: {
+    provider: 'twitch' | 'discord' | 'google' | 'github';
+    error?: unknown;
+    description?: string;
+    report?: string;
+    stage: string;
+  }) => {
+    showErrorToast({
+      title: t('page.login.error_title'),
+      error,
+      description,
+      context: {
+        provider,
+        stage,
+      },
+      report,
+      reportTitle: 'OAuth login failed',
+    });
+  };
+  const showLoginSuccessToast = (provider: 'twitch' | 'discord' | 'google' | 'github') => {
+    showSuccessToast({
+      title: t('page.login.success_title'),
+      description: t('page.login.success_description', {
+        provider: toProviderLabel(provider),
+      }),
+    });
+  };
   const fallbackToRedirect = (
     url: string,
     provider: 'twitch' | 'discord' | 'google' | 'github'
@@ -227,8 +263,8 @@
     }
     logger.warn('[Login] Popup was blocked or failed, falling back to redirect');
     toast.add({
-      title: $t('page.login.popup_blocked_title'),
-      description: $t('page.login.popup_blocked_description'),
+      title: t('page.login.popup_blocked_title'),
+      description: t('page.login.popup_blocked_description'),
       icon: 'i-heroicons-information-circle',
       duration: 3000,
     });
@@ -291,7 +327,7 @@
       if (!('type' in data)) return false;
       return (data as { type?: unknown }).type === 'OAUTH_ERROR';
     };
-    const messageHandler = (event: MessageEvent) => {
+    const messageHandler = async (event: MessageEvent) => {
       if (loginPageUnmounted) {
         cleanup();
         return;
@@ -299,19 +335,40 @@
       if (isOAuthErrorMessage(event)) {
         loading.value[provider] = false;
         cleanup();
-        toast.add({
-          title: $t('page.login.error_title'),
-          description: $t('page.login.error_description'),
-          icon: 'i-heroicons-exclamation-circle',
-          color: 'error',
+        const data = event.data as { description?: string; report?: string };
+        showLoginErrorToast({
+          provider,
+          description: data.description,
+          report: data.report,
+          stage: 'oauth_popup_callback',
         });
         return;
       }
       if (!isOAuthSuccessMessage(event)) return;
       loading.value[provider] = false;
       cleanup();
-      const redirect = sanitizeInternalRedirect(route.query.redirect);
-      navigateTo(redirect, { replace: true });
+      try {
+        await $supabase.ready();
+        if (!$supabase.user.loggedIn) {
+          const error = new Error('Session was not established in the opener after popup success.');
+          showLoginErrorToast({
+            provider,
+            error,
+            stage: 'oauth_popup_opener_sync',
+          });
+          return;
+        }
+        showLoginSuccessToast(provider);
+        const redirect = sanitizeInternalRedirect(route.query.redirect);
+        await navigateTo(redirect, { replace: true });
+      } catch (error) {
+        logger.error('[Login] Failed to refresh session after popup auth', error);
+        showLoginErrorToast({
+          provider,
+          error,
+          stage: 'oauth_popup_opener_refresh',
+        });
+      }
     };
     const pollTimer = window.setInterval(() => {
       if (loginPageUnmounted) {
@@ -367,6 +424,13 @@
   const { signInWithProvider } = useOAuthLogin({
     buildCallbackUrl,
     loading,
+    onError: ({ provider, error }) => {
+      showLoginErrorToast({
+        provider,
+        error,
+        stage: 'oauth_start',
+      });
+    },
     openPopupOrRedirect,
   });
   onBeforeUnmount(() => {

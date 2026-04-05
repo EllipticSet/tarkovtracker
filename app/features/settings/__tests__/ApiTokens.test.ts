@@ -282,6 +282,17 @@ describe('ApiTokens', () => {
         ([payload]) => payload.title === 'page.settings.card.apitokens.create_token_error'
       )
     ).toHaveLength(1);
+    expect(mockToast.add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actions: expect.arrayContaining([
+          expect.objectContaining({
+            label: 'error.copy_details',
+          }),
+        ]),
+        description: 'Internal server error',
+        title: 'page.settings.card.apitokens.create_token_error',
+      })
+    );
     expect(wrapper.text()).not.toContain('Direct Token');
   });
   it('shows an error instead of direct inserting when token-create is unavailable', async () => {
@@ -302,6 +313,17 @@ describe('ApiTokens', () => {
         ([payload]) => payload.title === 'page.settings.card.apitokens.create_token_error'
       )
     ).toHaveLength(1);
+    expect(mockToast.add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actions: expect.arrayContaining([
+          expect.objectContaining({
+            label: 'error.copy_details',
+          }),
+        ]),
+        description: 'HTTP 404 · Not found',
+        title: 'page.settings.card.apitokens.create_token_error',
+      })
+    );
     expect(wrapper.text()).not.toContain('Fallback Token');
   });
   it('allows direct insert fallback when explicitly enabled and token-create is unavailable', async () => {

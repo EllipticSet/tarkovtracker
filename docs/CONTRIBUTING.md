@@ -26,6 +26,22 @@ npm run dev
 
 The app will be available at `http://localhost:3000`.
 
+## AI Agent Context Files
+
+- `AGENTS.md` is the repository source of truth for agent instructions.
+- `CLAUDE.md` remains in the repo only as a Claude Code shim that imports `AGENTS.md`.
+- `GEMINI.md` is intentionally not tracked. If you use Gemini CLI, configure it to load `AGENTS.md` directly in `.gemini/settings.json`:
+
+```json
+{
+  "context": {
+    "fileName": ["AGENTS.md"]
+  }
+}
+```
+
+- Do not configure Gemini CLI to load both `AGENTS.md` and `GEMINI.md` if one imports the other, or you may duplicate instructions in memory.
+
 ### Environment Variables
 
 Create a `.env` file in the project root:

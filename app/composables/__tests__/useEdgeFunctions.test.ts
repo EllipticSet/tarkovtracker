@@ -189,17 +189,34 @@ describe('useEdgeFunctions.createToken', () => {
     });
     expect(mockFetch).not.toHaveBeenCalled();
   });
-  it('propagates Supabase rate limit errors without a bypass', async () => {
-    const rateLimitError = { status: 429, data: { message: 'Too many requests' } };
+  it('normalizes Supabase function HTTP errors with response details', async () => {
+    const rateLimitError = {
+      context: new Response(JSON.stringify({ message: 'Too many requests' }), {
+        headers: {
+          'content-type': 'application/json',
+        },
+        status: 429,
+        statusText: 'Too Many Requests',
+      }),
+      message: 'Edge Function returned a non-2xx status code',
+    };
     mockSupabaseClient.functions.invoke.mockResolvedValue({
       data: null,
       error: rateLimitError,
     });
     const { useEdgeFunctions } = await import('@/composables/api/useEdgeFunctions');
     const edgeFunctions = useEdgeFunctions();
-    await expect(edgeFunctions.createToken({ permissions: ['GP'], gameMode: 'pvp' })).rejects.toBe(
-      rateLimitError
-    );
+    await expect(
+      edgeFunctions.createToken({ permissions: ['GP'], gameMode: 'pvp' })
+    ).rejects.toMatchObject({
+      code: 'FUNCTION_HTTP_ERROR',
+      data: { message: 'Too many requests' },
+      functionName: 'token-create',
+      message: 'Edge Function returned a non-2xx status code',
+      name: 'SupabaseFunctionError',
+      status: 429,
+      statusText: 'Too Many Requests',
+    });
     expect(mockFetch).not.toHaveBeenCalled();
   });
   it('uses DELETE invocation for token revoke', async () => {

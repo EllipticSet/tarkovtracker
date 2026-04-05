@@ -7,6 +7,7 @@
 - Package manager: npm (`packageManager` is `npm@11.8.0`).
 - SSR is disabled (`ssr: false`), treat the app as client-only.
 - API + proxy handlers live in Nuxt server routes.
+- Supabase is the primary backend/data layer.
 - Copilot instructions are in `.github/copilot-instructions.md`.
 
 ## Project Structure
@@ -27,6 +28,11 @@
 - `supabase/` edge functions + DB assets (lint ignores `supabase/functions/**`).
 - `nuxt.config.ts` and `app.config.ts` hold app configuration.
 - `eslint.config.mjs` and `.prettierrc` define lint/format rules.
+
+## Architecture Notes
+
+- Current feature slices under `app/features/` include `admin`, `dashboard`, `drawer`, `hideout`, `maps`, `neededitems`, `profile`, `settings`, `storyline`, `streamer-tools`, `tasks`, and `team`.
+- Core app state is coordinated through `useTarkovStore` with `useMetadataStore`, `useProgressStore`, and `usePreferencesStore`.
 
 ## Dev & Build Commands
 
@@ -182,6 +188,11 @@
 - When investigating user issues, correlate findings across GA4, Clarity, and Cloudflare when possible.
 - Always state the date range, property/project/zone, and source used in analytics conclusions.
 - Use browser-based dashboard inspection only as a fallback when MCP/API access is missing or insufficient.
+
+## External Data Rules
+
+- When using Tarkov API or MCP tools, state only what the API returned.
+- Missing API data is not proof the item, mechanic, or content does not exist in-game; say the API does not show it.
 
 ## Agent Rules
 

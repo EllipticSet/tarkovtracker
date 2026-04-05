@@ -271,6 +271,7 @@
 </template>
 <script setup lang="ts">
   import { useEdgeFunctions } from '@/composables/api/useEdgeFunctions';
+  import { useDiagnosticToast } from '@/composables/useDiagnosticToast';
   import { API_PERMISSIONS, GAME_MODE_OPTIONS, GAME_MODES, type GameMode } from '@/utils/constants';
   import { logger } from '@/utils/logger';
   import { shouldFallbackForUnavailableTokenFunction } from '@/utils/tokenFunctionFallback';
@@ -303,6 +304,7 @@
   const toast = useToast();
   const { $supabase } = useNuxtApp();
   const runtimeConfig = useRuntimeConfig();
+  const { showErrorToast } = useDiagnosticToast();
   const edgeFunctions = useEdgeFunctions();
   const showCreateDialog = ref(false);
   const showTokenCreatedDialog = ref(false);
@@ -443,9 +445,15 @@
         return;
       }
       logger.error('[ApiTokens] Failed to load tokens:', error);
-      toast.add({
-        title: t('page.settings.card.apitokens.create_token_error'),
-        color: 'error',
+      showErrorToast({
+        title: t('page.settings.card.apitokens.load_tokens_error'),
+        error,
+        context: {
+          action: 'load',
+          area: 'api_tokens',
+          userId,
+        },
+        reportTitle: t('page.settings.card.apitokens.report.load_failed'),
       });
     } finally {
       if (requestId === loadTokensRequestId) {
@@ -560,9 +568,17 @@
         return;
       }
       logger.error('[ApiTokens] Failed to create token:', error);
-      toast.add({
+      showErrorToast({
         title: t('page.settings.card.apitokens.create_token_error'),
-        color: 'error',
+        error,
+        context: {
+          action: 'create',
+          area: 'api_tokens',
+          gameMode: selectedGameMode.value,
+          permissionCount: selectedPermissions.value.length,
+          userId,
+        },
+        reportTitle: t('page.settings.card.apitokens.report.create_failed'),
       });
     } finally {
       if (requestId === createTokenRequestId) {
@@ -622,9 +638,16 @@
       await loadTokens();
     } catch (error) {
       logger.error('[ApiTokens] Failed to revoke token:', error);
-      toast.add({
+      showErrorToast({
         title: t('page.settings.card.apitokens.token_revoke_error'),
-        color: 'error',
+        error,
+        context: {
+          action: 'revoke',
+          area: 'api_tokens',
+          tokenId,
+          userId: getActiveUserId(),
+        },
+        reportTitle: t('page.settings.card.apitokens.report.revoke_failed'),
       });
     } finally {
       revokingId.value = null;

@@ -21,6 +21,52 @@ const assertValidTeamId = (teamId: string) => {
     throw new Error('Invalid team id');
   }
 };
+interface NormalizedFunctionError {
+  cause: unknown;
+  code: 'FUNCTION_HTTP_ERROR';
+  data: unknown;
+  functionName: string;
+  message: string;
+  name: 'SupabaseFunctionError';
+  status: number;
+  statusText: string;
+}
+const normalizeFunctionError = async <TError>(
+  fnName: string,
+  error: TError
+): Promise<TError | NormalizedFunctionError> => {
+  if (!error || typeof error !== 'object') {
+    return error;
+  }
+  const context = 'context' in error ? error.context : null;
+  if (!(context instanceof Response)) {
+    return error;
+  }
+  let data: unknown = null;
+  try {
+    data = await context.clone().json();
+  } catch {
+    try {
+      const text = await context.clone().text();
+      data = text.trim().length > 0 ? text : null;
+    } catch {
+      data = null;
+    }
+  }
+  return {
+    cause: error,
+    code: 'FUNCTION_HTTP_ERROR',
+    data,
+    functionName: fnName,
+    message:
+      'message' in error && typeof error.message === 'string'
+        ? error.message
+        : `Supabase function ${fnName} failed`,
+    name: 'SupabaseFunctionError',
+    status: context.status,
+    statusText: context.statusText,
+  };
+};
 export const useEdgeFunctions = () => {
   const { $supabase } = useNuxtApp();
   const getAuthToken = async () => {
@@ -42,7 +88,7 @@ export const useEdgeFunctions = () => {
       method,
     });
     if (error) {
-      throw error;
+      throw await normalizeFunctionError(fnName, error);
     }
     return data as T;
   };

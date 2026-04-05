@@ -5,14 +5,21 @@ export type OAuthProvider = 'twitch' | 'discord' | 'google' | 'github';
 interface UseOAuthLoginOptions {
   buildCallbackUrl: () => string;
   loading: Ref<Record<OAuthProvider, boolean>>;
+  onError?: (payload: { error: unknown; provider: OAuthProvider }) => void;
   openPopupOrRedirect: (url: string, provider: OAuthProvider) => boolean;
 }
-const toProviderLabel = (provider: OAuthProvider): string => {
-  return provider.charAt(0).toUpperCase() + provider.slice(1);
+export const toProviderLabel = (provider: OAuthProvider): string => {
+  return {
+    discord: 'Discord',
+    github: 'GitHub',
+    google: 'Google',
+    twitch: 'Twitch',
+  }[provider];
 };
 export function useOAuthLogin({
   buildCallbackUrl,
   loading,
+  onError,
   openPopupOrRedirect,
 }: UseOAuthLoginOptions): {
   signInWithProvider: (provider: OAuthProvider) => Promise<void>;
@@ -35,6 +42,7 @@ export function useOAuthLogin({
     } catch (error) {
       trackLoginFailed(provider, error);
       logger.error(`[Login] ${toProviderLabel(provider)} sign in error:`, error);
+      onError?.({ provider, error });
     } finally {
       if (!isLoadingManagedExternally) {
         loading.value[provider] = false;

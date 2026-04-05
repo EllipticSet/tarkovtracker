@@ -142,6 +142,60 @@ describe('supabase plugin', () => {
     const result = (await setupPromise) as SupabasePluginProvide | undefined;
     expect(result?.provide.supabase.user.id).toBe('user-1');
     expect(result?.provide.supabase.user.loggedIn).toBe(true);
+    expect(mockCreateClient).toHaveBeenCalledWith(
+      'https://test.supabase.co',
+      'test-anon-key',
+      expect.objectContaining({
+        auth: {
+          detectSessionInUrl: true,
+          flowType: 'pkce',
+        },
+      })
+    );
+  });
+  it('waits for code-based oauth callback hydration before setup resolves', async () => {
+    localStorage.removeItem('sb-test-auth-token');
+    window.history.replaceState(null, '', '/');
+    try {
+      window.history.replaceState(null, '', '/auth/callback?code=oauth-code');
+      const sessionDeferred = createDeferred<{
+        data: { session: ReturnType<typeof createSession> };
+      }>();
+      mockCreateClient.mockReturnValue({
+        auth: {
+          getSession: vi.fn(() => sessionDeferred.promise),
+          onAuthStateChange: vi.fn(() => ({
+            data: {
+              subscription: {
+                unsubscribe: vi.fn(),
+              },
+            },
+          })),
+          signInWithOAuth: vi.fn(),
+          signOut: vi.fn(),
+        },
+      });
+      const plugin = (await import('@/plugins/supabase.client')).default;
+      let resolved = false;
+      const setupPromise = Promise.resolve(
+        plugin.setup?.({} as Parameters<NonNullable<typeof plugin.setup>>[0])
+      ).then((value) => {
+        resolved = true;
+        return value;
+      });
+      await flushPlugin();
+      expect(resolved).toBe(false);
+      sessionDeferred.resolve({
+        data: {
+          session: createSession('user-code'),
+        },
+      });
+      const result = (await setupPromise) as SupabasePluginProvide | undefined;
+      expect(result?.provide.supabase.user.id).toBe('user-code');
+      expect(result?.provide.supabase.user.loggedIn).toBe(true);
+    } finally {
+      window.history.replaceState(null, '', '/');
+    }
   });
   it('initializes auth listeners in background without a stored session', async () => {
     localStorage.removeItem('sb-test-auth-token');
@@ -217,6 +271,45 @@ describe('supabase plugin', () => {
     await flushPlugin();
     expect(localStorage.getItem(STORAGE_KEYS.progress)).toBe('progress-state');
     expect(localStorage.getItem(STORAGE_KEYS.preferences)).toBe('preferences-state');
+  });
+  it('rehydrates the user when ready is called after a later session write', async () => {
+    localStorage.removeItem('sb-test-auth-token');
+    const getSession = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: {
+          session: createSession(null),
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          session: createSession('user-3'),
+        },
+      });
+    mockCreateClient.mockReturnValue({
+      auth: {
+        getSession,
+        onAuthStateChange: vi.fn(() => ({
+          data: {
+            subscription: {
+              unsubscribe: vi.fn(),
+            },
+          },
+        })),
+        signInWithOAuth: vi.fn(),
+        signOut: vi.fn(),
+      },
+    });
+    const plugin = (await import('@/plugins/supabase.client')).default;
+    const result = (await plugin.setup?.({} as Parameters<NonNullable<typeof plugin.setup>>[0])) as
+      | SupabasePluginProvide
+      | undefined;
+    await flushPlugin();
+    expect(result?.provide.supabase.user.loggedIn).toBe(false);
+    await result?.provide.supabase.ready();
+    expect(getSession).toHaveBeenCalledTimes(2);
+    expect(result?.provide.supabase.user.id).toBe('user-3');
+    expect(result?.provide.supabase.user.loggedIn).toBe(true);
   });
   it('preserves scoped local state after signOut', async () => {
     const { signOut } = createClientMock('user-1');
