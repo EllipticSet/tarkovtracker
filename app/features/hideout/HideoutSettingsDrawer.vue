@@ -41,7 +41,7 @@
           >
             <UCheckbox v-model="collapseCompleted" color="success" :disabled="isHelpTourActive" />
             <span class="text-surface-200 text-sm">
-              {{ t('page.hideout.collapse_completed') || 'Collapse completed stations' }}
+              {{ copy('page.hideout.collapse_completed', 'Collapse completed stations') }}
             </span>
           </label>
           <label
@@ -49,7 +49,7 @@
           >
             <UCheckbox v-model="sortReadyFirst" color="info" :disabled="isHelpTourActive" />
             <span class="text-surface-200 text-sm">
-              {{ t('page.hideout.sort.ready_first') || 'Sort ready to build first' }}
+              {{ copy('page.hideout.sort.ready_first', 'Sort ready to build first') }}
             </span>
           </label>
         </div>
@@ -58,7 +58,7 @@
         <div class="mb-2 flex items-center gap-2">
           <UIcon name="i-mdi-lock-outline" class="text-primary-400 h-4 w-4" />
           <h3 class="text-xs font-semibold tracking-wide text-white uppercase">
-            {{ t('page.hideout.prereq_filters.title') || 'Availability requirements' }}
+            {{ copy('page.hideout.prereq_filters.title', 'Availability requirements') }}
           </h3>
         </div>
         <p class="text-surface-500 mb-2 text-xs">
@@ -75,7 +75,7 @@
           >
             <UCheckbox v-model="requireStationLevels" :disabled="isHelpTourActive" />
             <span class="text-surface-200 text-sm">
-              {{ t('page.hideout.prereq_filters.station_levels') || 'Require station levels' }}
+              {{ copy('page.hideout.prereq_filters.station_levels', 'Require station levels') }}
             </span>
           </label>
           <label
@@ -83,7 +83,7 @@
           >
             <UCheckbox v-model="requireSkillLevels" :disabled="isHelpTourActive" />
             <span class="text-surface-200 text-sm">
-              {{ t('page.hideout.prereq_filters.skill_levels') || 'Require skill levels' }}
+              {{ copy('page.hideout.prereq_filters.skill_levels', 'Require skill levels') }}
             </span>
           </label>
           <label
@@ -91,7 +91,7 @@
           >
             <UCheckbox v-model="requireTraderLoyalty" :disabled="isHelpTourActive" />
             <span class="text-surface-200 text-sm">
-              {{ t('page.hideout.prereq_filters.trader_loyalty') || 'Require trader loyalty' }}
+              {{ copy('page.hideout.prereq_filters.trader_loyalty', 'Require trader loyalty') }}
             </span>
           </label>
         </div>

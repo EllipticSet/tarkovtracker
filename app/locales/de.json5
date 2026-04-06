@@ -1082,7 +1082,7 @@
       share_private_outro: ', um diesen Link öffentlich zu machen.',
       share_public_enabled: 'This mode is public. Anyone with the link can view it.',
       share_private_enabled: 'This mode is private.',
-      mode_toggle_label: 'Select profile mode',
+      mode_toggle_label: 'Profilmodus auswählen',
       copy_snapshot: 'Copy Snapshot',
       view_tasks: 'Open Tasks',
       tab_overview: 'Übersicht',

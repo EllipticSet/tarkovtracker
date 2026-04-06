@@ -38,6 +38,8 @@
         </div>
         <div class="space-y-3">
           <div
+            role="group"
+            :aria-label="t('page.needed_items.filters.label')"
             class="bg-surface-900/60 flex items-center gap-1 rounded-lg border border-white/10 p-1"
           >
             <UButton
@@ -45,6 +47,7 @@
               color="neutral"
               size="sm"
               class="flex-1"
+              :aria-pressed="firFilter === 'all'"
               :class="firFilter === 'all' ? 'bg-white/10 text-white' : 'text-surface-300'"
               @click="firFilter = 'all'"
             >
@@ -55,6 +58,7 @@
               color="neutral"
               size="sm"
               class="flex-1"
+              :aria-pressed="firFilter === 'fir'"
               :class="firFilter === 'fir' ? 'bg-white/10 text-white' : 'text-surface-300'"
               @click="firFilter = 'fir'"
             >
@@ -65,6 +69,7 @@
               color="neutral"
               size="sm"
               class="flex-1"
+              :aria-pressed="firFilter === 'non-fir'"
               :class="firFilter === 'non-fir' ? 'bg-white/10 text-white' : 'text-surface-300'"
               @click="firFilter = 'non-fir'"
             >
@@ -104,12 +109,17 @@
           </h3>
         </div>
         <div class="space-y-3">
-          <div class="flex flex-wrap gap-2">
+          <div
+            role="group"
+            :aria-label="t('page.tasks.settings.tabs.appearance')"
+            class="flex flex-wrap gap-2"
+          >
             <UButton
               variant="ghost"
               color="neutral"
               size="sm"
               icon="i-mdi-view-list"
+              :aria-pressed="!groupByItem && viewMode === 'list'"
               :class="
                 !groupByItem && viewMode === 'list' ? 'bg-white/10 text-white' : 'text-surface-300'
               "
@@ -122,6 +132,7 @@
               color="neutral"
               size="sm"
               icon="i-mdi-view-grid"
+              :aria-pressed="!groupByItem && viewMode === 'grid'"
               :class="
                 !groupByItem && viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-surface-300'
               "
@@ -134,6 +145,7 @@
               color="neutral"
               size="sm"
               icon="i-mdi-group"
+              :aria-pressed="groupByItem"
               :class="groupByItem ? 'bg-white/10 text-white' : 'text-surface-300'"
               @click="setGroupedView"
             >

@@ -92,10 +92,10 @@
               <template #footer>
                 <div class="flex justify-end gap-2 px-4 pb-4">
                   <UButton color="neutral" variant="ghost" @click="cancelPrereqToggle">
-                    {{ $t('page.hideout.prereq_filters.confirm_cancel') || 'Cancel' }}
+                    {{ helpText('page.hideout.prereq_filters.confirm_cancel', 'Cancel') }}
                   </UButton>
                   <UButton color="warning" variant="solid" @click="confirmPrereqToggle">
-                    {{ $t('page.hideout.prereq_filters.confirm_confirm') || 'Enable' }}
+                    {{ helpText('page.hideout.prereq_filters.confirm_confirm', 'Enable') }}
                   </UButton>
                 </div>
               </template>
@@ -293,8 +293,8 @@
     maxed: 8,
     all: 9,
   } as const;
-  const helpText = (key: string, fallback: string) => {
-    const value = t(key);
+  const helpText = (key: string, fallback: string, params?: Record<string, string>) => {
+    const value = params ? t(key, params) : t(key);
     return value === key ? fallback : value;
   };
   const hideoutHelpSteps = computed(() => {
@@ -672,9 +672,9 @@
     },
   ]);
   const prereqLabels = computed(() => ({
-    station: t('page.hideout.prereq_filters.station_levels') || 'Require station levels',
-    skill: t('page.hideout.prereq_filters.skill_levels') || 'Require skill levels',
-    trader: t('page.hideout.prereq_filters.trader_loyalty') || 'Require trader loyalty',
+    station: helpText('page.hideout.prereq_filters.station_levels', 'Require station levels'),
+    skill: helpText('page.hideout.prereq_filters.skill_levels', 'Require skill levels'),
+    trader: helpText('page.hideout.prereq_filters.trader_loyalty', 'Require trader loyalty'),
   }));
   const pendingPrereqLabel = computed(() => {
     if (!pendingPrereqToggle.value) return '';
@@ -686,15 +686,17 @@
       preferencesStore.hideoutRequireSkillLevels ||
       preferencesStore.hideoutRequireTraderLoyalty
   );
-  const prereqConfirmTitle = computed(
-    () => t('page.hideout.prereq_filters.confirm_title') || 'Enable availability requirement?'
+  const prereqConfirmTitle = computed(() =>
+    helpText('page.hideout.prereq_filters.confirm_title', 'Enable availability requirement?')
   );
-  const prereqConfirmDescription = computed(
-    () =>
-      t('page.hideout.prereq_filters.confirm_description', {
+  const prereqConfirmDescription = computed(() =>
+    helpText(
+      'page.hideout.prereq_filters.confirm_description',
+      'Enabling this requirement may remove hideout upgrades that no longer meet prerequisites.',
+      {
         requirement: pendingPrereqLabel.value,
-      }) ||
-      'Enabling this requirement may remove hideout upgrades that no longer meet prerequisites.'
+      }
+    )
   );
   watch(
     [isStoreLoading, shouldEnforcePrereqs],

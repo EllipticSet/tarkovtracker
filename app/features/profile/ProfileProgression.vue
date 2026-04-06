@@ -49,10 +49,11 @@
             <div
               class="flex overflow-hidden rounded-md border border-white/10"
               role="group"
-              :aria-label="t('page.profile.mode_toggle_label', 'Select profile mode')"
+              :aria-label="t('page.profile.mode_toggle_label')"
             >
               <button
                 type="button"
+                :aria-pressed="selectedMode === GAME_MODES.PVP"
                 class="focus:ring-pvp-400 flex min-h-8 flex-1 items-center justify-center gap-1.5 px-2 py-2 text-xs font-semibold uppercase transition-colors focus:z-10 focus:ring-2 focus:outline-none"
                 :class="pvpToggleClass"
                 @click="selectedMode = GAME_MODES.PVP"
@@ -62,6 +63,7 @@
               </button>
               <button
                 type="button"
+                :aria-pressed="selectedMode === GAME_MODES.PVE"
                 class="focus:ring-pve-400 flex min-h-8 flex-1 items-center justify-center gap-1.5 px-2 py-2 text-xs font-semibold uppercase transition-colors focus:z-10 focus:ring-2 focus:outline-none"
                 :class="pveToggleClass"
                 @click="selectedMode = GAME_MODES.PVE"
