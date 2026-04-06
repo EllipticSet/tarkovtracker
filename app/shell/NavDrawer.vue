@@ -77,7 +77,7 @@
           <DrawerItem
             avatar="/img/logos/tarkovmonitorlogo.avif"
             locale-key="tarkovmonitor"
-            href="https://github.com/the-hideout/TarkovMonitor"
+            href="https://tarkov.dev/tarkov-monitor"
             :is-collapsed="isCollapsed"
           />
           <DrawerItem
