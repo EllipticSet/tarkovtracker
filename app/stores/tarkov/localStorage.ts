@@ -1,8 +1,9 @@
+import { migrateToGameModeStructure, type UserState } from '@/stores/progressState';
 import { clearProgressStorage } from '@/utils/clientStorage';
 import { logger } from '@/utils/logger';
+import { sanitizeOwnedUserState } from '@/utils/progressSanitizers';
 import { LEGACY_STORAGE_KEYS, STORAGE_KEYS } from '@/utils/storageKeys';
 import { parseUserScopedStorage } from '@/utils/userScopedStorage';
-import type { UserState } from '@/stores/progressState';
 export type PersistedProgressSnapshot = {
   state: UserState;
   storedUserId: string | null;
@@ -78,14 +79,14 @@ export const parsePersistedProgressState = (
       return null;
     }
     return {
-      state: wrapped.data,
+      state: sanitizeOwnedUserState(migrateToGameModeStructure(wrapped.data)),
       storedUserId: wrapped._userId,
       timestamp: wrapped._timestamp ?? null,
     };
   }
   try {
     return {
-      state: JSON.parse(rawValue) as UserState,
+      state: sanitizeOwnedUserState(migrateToGameModeStructure(JSON.parse(rawValue) as UserState)),
       storedUserId: null,
       timestamp: null,
     };
@@ -112,11 +113,12 @@ export const patchStoreState = (
   store: { $patch: (fn: (state: UserState) => void) => void },
   snapshot: UserState
 ) => {
+  const sanitizedSnapshot = sanitizeOwnedUserState(snapshot);
   store.$patch((state) => {
-    state.currentGameMode = snapshot.currentGameMode;
-    state.gameEdition = snapshot.gameEdition;
-    state.tarkovUid = snapshot.tarkovUid;
-    state.pvp = snapshot.pvp;
-    state.pve = snapshot.pve;
+    state.currentGameMode = sanitizedSnapshot.currentGameMode;
+    state.gameEdition = sanitizedSnapshot.gameEdition;
+    state.tarkovUid = sanitizedSnapshot.tarkovUid;
+    state.pvp = sanitizedSnapshot.pvp;
+    state.pve = sanitizedSnapshot.pve;
   });
 };

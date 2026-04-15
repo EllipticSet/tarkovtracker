@@ -58,6 +58,7 @@ import { useMetadataStore } from '@/stores/useMetadata';
 import { delay } from '@/utils/async';
 import { GAME_MODES, MANUAL_FAIL_TASK_IDS, type GameMode } from '@/utils/constants';
 import { logger } from '@/utils/logger';
+import { sanitizeOwnedProgressData, sanitizeOwnedUserState } from '@/utils/progressSanitizers';
 import { STORAGE_KEYS } from '@/utils/storageKeys';
 import { getCompletionFlags, type RawTaskCompletion } from '@/utils/taskStatus';
 import {
@@ -1302,10 +1303,13 @@ export async function initializeTarkovSync() {
         notifyLocalIgnored('other_account');
       }
       // Get current localStorage state (loaded by persist plugin)
-      let localState = tarkovStore.$state;
+      let localState = sanitizeOwnedUserState(tarkovStore.$state);
       let hasLocalProgress = hasProgress(localState);
+      if (!deepEqual(localState, tarkovStore.$state)) {
+        patchStoreState(tarkovStore, localState);
+      }
       if (preservedLocalSnapshot) {
-        localState = preservedLocalSnapshot.state;
+        localState = sanitizeOwnedUserState(preservedLocalSnapshot.state);
         hasLocalProgress = hasProgress(localState);
         if (!deepEqual(localState, tarkovStore.$state)) {
           patchStoreState(tarkovStore, localState);
@@ -1381,13 +1385,13 @@ export async function initializeTarkovSync() {
       }
       // Normalize Supabase data with defaults for safety
       const normalizedRemote = data
-        ? ({
+        ? sanitizeOwnedUserState({
             currentGameMode: coerceGameMode(data.current_game_mode),
             gameEdition: data.game_edition || defaultState.gameEdition,
             tarkovUid: data.tarkov_uid ?? null,
-            pvp: { ...defaultState.pvp, ...(data.pvp_data || {}) },
-            pve: { ...defaultState.pve, ...(data.pve_data || {}) },
-          } as UserState)
+            pvp: data.pvp_data,
+            pve: data.pve_data,
+          })
         : null;
       const remoteScore = normalizedRemote ? progressScore(normalizedRemote) : 0;
       const localScore = progressScore(localState);
@@ -1589,16 +1593,17 @@ export async function initializeTarkovSync() {
           }
           // Track sync time for self-origin filtering in realtime listener
           recordLocalSyncTime();
+          const sanitizedUserState = sanitizeOwnedUserState(userState);
           return {
             user_id: $supabase.user.id,
-            current_game_mode: userState.currentGameMode || GAME_MODES.PVP,
+            current_game_mode: sanitizedUserState.currentGameMode || GAME_MODES.PVP,
             game_edition:
-              typeof userState.gameEdition === 'string'
-                ? parseInt(userState.gameEdition)
-                : userState.gameEdition,
-            tarkov_uid: userState.tarkovUid ?? null,
-            pvp_data: userState.pvp || {},
-            pve_data: userState.pve || {},
+              typeof sanitizedUserState.gameEdition === 'string'
+                ? parseInt(sanitizedUserState.gameEdition)
+                : sanitizedUserState.gameEdition,
+            tarkov_uid: sanitizedUserState.tarkovUid ?? null,
+            pvp_data: sanitizedUserState.pvp,
+            pve_data: sanitizedUserState.pve,
           };
         },
       });
@@ -1836,15 +1841,15 @@ function setupRealtimeListener() {
         const updateTime = Number.isNaN(parsedUpdateTime) ? Date.now() : parsedUpdateTime;
         const timeSinceLastSync = updateTime - lastLocalSyncTime;
         // Get current local state
-        const localState = tarkovStore.$state;
+        const localState = sanitizeOwnedUserState(tarkovStore.$state);
         // Merge remote changes with local state
         const merged: Partial<UserState> = {
           currentGameMode: remoteData.current_game_mode
             ? coerceGameMode(remoteData.current_game_mode)
             : localState.currentGameMode,
           gameEdition: remoteData.game_edition || localState.gameEdition,
-          pvp: mergeProgressData(localState.pvp, remoteData.pvp_data),
-          pve: mergeProgressData(localState.pve, remoteData.pve_data),
+          pvp: mergeProgressData(localState.pvp, sanitizeOwnedProgressData(remoteData.pvp_data)),
+          pve: mergeProgressData(localState.pve, sanitizeOwnedProgressData(remoteData.pve_data)),
         };
         const nextState: UserState = {
           currentGameMode: merged.currentGameMode ?? localState.currentGameMode,

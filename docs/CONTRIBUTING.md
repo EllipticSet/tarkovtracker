@@ -221,6 +221,16 @@ Recommended mappings:
 1. Create store file in `app/stores/`
 2. If persisted, configure persistence options
 
+### Tarkov.dev Import and Linking Rules
+
+- Persist only the linked `tarkovUid`.
+- Do not add a persisted `tarkovUidMode`, linked-mode field, or imported-mode field.
+- Import target mode is chosen in the import UI and is temporary action state only.
+- When generating tarkov.dev links, use the currently viewed or selected mode to choose the URL
+  slug instead of storing import metadata.
+- Old backup files may still contain legacy import-mode metadata; new code should ignore it rather
+  than restore it into state.
+
 ### Adding a New API Endpoint
 
 1. Create route file in `app/server/api/`
