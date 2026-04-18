@@ -259,6 +259,17 @@ const sanitizeTarkovUid = (value: unknown): number | null => {
   const normalized = Math.trunc(uid);
   return Number.isSafeInteger(normalized) && normalized > 0 ? normalized : null;
 };
+export const hasDeprecatedTarkovDevProfileData = (value: unknown): boolean => {
+  if (!isRecord(value)) {
+    return false;
+  }
+  if (Object.prototype.hasOwnProperty.call(value, 'tarkovDevProfile')) {
+    return true;
+  }
+  return (
+    hasDeprecatedTarkovDevProfileData(value.pvp) || hasDeprecatedTarkovDevProfileData(value.pve)
+  );
+};
 export const sanitizeOwnedProgressData = (value: unknown): UserProgressData => {
   const sanitized: UserProgressData = createDefaultOwnedProgressData();
   if (!isRecord(value)) {

@@ -269,6 +269,14 @@ const progressWithItemCounts = (
 const cloneProgress = (value: UserProgressData): UserProgressData => {
   return JSON.parse(JSON.stringify(value)) as UserProgressData;
 };
+const withLegacyTarkovDevProfile = (value: UserProgressData, aid: number): UserProgressData => {
+  return Object.assign(cloneProgress(value), {
+    tarkovDevProfile: {
+      aid,
+      importedAt: 123,
+    },
+  }) as UserProgressData;
+};
 const waitForBackgroundTasks = async () => {
   await Promise.resolve();
   await Promise.resolve();
@@ -974,6 +982,50 @@ describe('useTarkov sync integration', () => {
     });
     await initializeTarkovSync();
     expect(upsert).not.toHaveBeenCalled();
+  });
+  it('rewrites sanitized progress locally and remotely when deprecated tarkov.dev payloads remain', async () => {
+    const legacyPersistedState = {
+      ...structuredClone(defaultState),
+      pvp: withLegacyTarkovDevProfile(progressWithLevel(1), 12345),
+      pve: withLegacyTarkovDevProfile(progressWithLevel(1), 67890),
+    };
+    localStorage.setItem(
+      STORAGE_KEYS.progress,
+      JSON.stringify({
+        _timestamp: Date.parse('2026-02-01T00:00:00.000Z'),
+        _userId: 'user-1',
+        data: legacyPersistedState,
+      })
+    );
+    single.mockResolvedValue({
+      data: createRemoteRow({
+        pvp_data: withLegacyTarkovDevProfile(progressWithLevel(7), 12345),
+        pve_data: withLegacyTarkovDevProfile(progressWithLevel(3), 67890),
+      }),
+      error: null,
+    });
+    const store = useTarkovStore();
+    await initializeTarkovSync();
+    const persistedSnapshot = JSON.parse(localStorage.getItem(STORAGE_KEYS.progress) || '{}') as {
+      data?: typeof defaultState;
+    };
+    expect(upsert).toHaveBeenCalled();
+    const lastUpsertCall = upsert.mock.calls.at(-1);
+    if (!lastUpsertCall) {
+      throw new Error('Expected an upsert payload');
+    }
+    const lastUpsertPayload = lastUpsertCall.at(0) as unknown as {
+      pve_data?: Record<string, unknown>;
+      pvp_data?: Record<string, unknown>;
+    };
+    expect(lastUpsertPayload.pvp_data).not.toHaveProperty('tarkovDevProfile');
+    expect(lastUpsertPayload.pve_data).not.toHaveProperty('tarkovDevProfile');
+    expect(persistedSnapshot.data?.pvp).not.toHaveProperty('tarkovDevProfile');
+    expect(persistedSnapshot.data?.pve).not.toHaveProperty('tarkovDevProfile');
+    expect(store.pvp).not.toHaveProperty('tarkovDevProfile');
+    expect(store.pve).not.toHaveProperty('tarkovDevProfile');
+    expect(store.pvp.level).toBe(7);
+    expect(store.pve.level).toBe(3);
   });
   it('aborts initialization when owned-local upsert fails', async () => {
     setLocalProgress(10);

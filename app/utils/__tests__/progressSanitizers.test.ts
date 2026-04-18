@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_SKILL_LEVEL } from '@/utils/constants';
-import { sanitizeOwnedProgressData, sanitizeOwnedUserState } from '@/utils/progressSanitizers';
+import {
+  hasDeprecatedTarkovDevProfileData,
+  sanitizeOwnedProgressData,
+  sanitizeOwnedUserState,
+} from '@/utils/progressSanitizers';
 describe('sanitizeOwnedProgressData', () => {
   it('drops legacy tarkov.dev payloads while preserving canonical fields', () => {
     const result = sanitizeOwnedProgressData({
@@ -121,5 +125,36 @@ describe('sanitizeOwnedUserState', () => {
     expect(result.tarkovUid).toBe(67890);
     expect(result.pvp).not.toHaveProperty('tarkovDevProfile');
     expect(result.pve).not.toHaveProperty('tarkovDevProfile');
+  });
+});
+describe('hasDeprecatedTarkovDevProfileData', () => {
+  it('detects deprecated tarkov.dev payloads in both legacy and per-mode shapes', () => {
+    expect(
+      hasDeprecatedTarkovDevProfileData({
+        tarkovDevProfile: {
+          aid: 12345,
+        },
+      })
+    ).toBe(true);
+    expect(
+      hasDeprecatedTarkovDevProfileData({
+        pvp: {
+          tarkovDevProfile: {
+            aid: 12345,
+          },
+        },
+        pve: {},
+      })
+    ).toBe(true);
+    expect(
+      hasDeprecatedTarkovDevProfileData({
+        pvp: {
+          level: 12,
+        },
+        pve: {
+          level: 8,
+        },
+      })
+    ).toBe(false);
   });
 });

@@ -1,10 +1,14 @@
 import { migrateToGameModeStructure, type UserState } from '@/stores/progressState';
 import { clearProgressStorage } from '@/utils/clientStorage';
 import { logger } from '@/utils/logger';
-import { sanitizeOwnedUserState } from '@/utils/progressSanitizers';
+import {
+  hasDeprecatedTarkovDevProfileData,
+  sanitizeOwnedUserState,
+} from '@/utils/progressSanitizers';
 import { LEGACY_STORAGE_KEYS, STORAGE_KEYS } from '@/utils/storageKeys';
 import { parseUserScopedStorage } from '@/utils/userScopedStorage';
 export type PersistedProgressSnapshot = {
+  hadDeprecatedProgressData: boolean;
   state: UserState;
   storedUserId: string | null;
   timestamp: number | null;
@@ -75,18 +79,22 @@ export const parsePersistedProgressState = (
   }
   const wrapped = parseUserScopedStorage<UserState>(rawValue);
   if (wrapped) {
+    const hadDeprecatedProgressData = hasDeprecatedTarkovDevProfileData(wrapped.data);
     if (wrapped._userId !== userId) {
       return null;
     }
     return {
+      hadDeprecatedProgressData,
       state: sanitizeOwnedUserState(migrateToGameModeStructure(wrapped.data)),
       storedUserId: wrapped._userId,
       timestamp: wrapped._timestamp ?? null,
     };
   }
   try {
+    const parsed = JSON.parse(rawValue) as UserState;
     return {
-      state: sanitizeOwnedUserState(migrateToGameModeStructure(JSON.parse(rawValue) as UserState)),
+      hadDeprecatedProgressData: hasDeprecatedTarkovDevProfileData(parsed),
+      state: sanitizeOwnedUserState(migrateToGameModeStructure(parsed)),
       storedUserId: null,
       timestamp: null,
     };
