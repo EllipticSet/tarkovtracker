@@ -11,6 +11,7 @@ describe('buildTarkovDevProfileUrl', () => {
   });
   it('returns undefined for missing or invalid uid values', () => {
     expect(buildTarkovDevProfileUrl(null, 'pvp')).toBeUndefined();
+    expect(buildTarkovDevProfileUrl(-1, 'pve')).toBeUndefined();
     expect(buildTarkovDevProfileUrl(0, 'pve')).toBeUndefined();
     expect(buildTarkovDevProfileUrl(Number.NaN, 'pvp')).toBeUndefined();
     expect(buildTarkovDevProfileUrl(Number.POSITIVE_INFINITY, 'pve')).toBeUndefined();

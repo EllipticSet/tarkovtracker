@@ -48,6 +48,7 @@ Workflow-specific secrets are not required for the Gitleaks step anymore. The wo
 gh run list              # List recent runs
 gh run view <run-id>     # View run details
 gh run watch             # Watch running workflow
+npm run supabase:check   # Validate local Supabase migration reset + lint
 ```
 
 ## Local Testing

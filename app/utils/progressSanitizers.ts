@@ -270,6 +270,8 @@ export const hasDeprecatedTarkovDevProfileData = (value: unknown): boolean => {
     hasDeprecatedTarkovDevProfileData(value.pvp) || hasDeprecatedTarkovDevProfileData(value.pve)
   );
 };
+// Keep this canonical sanitizer aligned with the persisted DB sanitizer in the
+// tarkovDevProfile cleanup migration when changing stored progress fields.
 export const sanitizeOwnedProgressData = (value: unknown): UserProgressData => {
   const sanitized: UserProgressData = createDefaultOwnedProgressData();
   if (!isRecord(value)) {

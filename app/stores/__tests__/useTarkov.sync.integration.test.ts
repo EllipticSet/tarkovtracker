@@ -1424,6 +1424,99 @@ describe('useTarkov sync integration', () => {
     pendingUpsertResolve({ error: null });
     await waitForBackgroundTasks();
   });
+  it('backs off deprecated remote cleanup retries after repeated failures and retries again later', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-04-22T12:00:00.000Z'));
+      single.mockResolvedValue({
+        data: createRemoteRow(),
+        error: null,
+      });
+      await initializeTarkovSync();
+      const callback = getRealtimeCallback();
+      expect(callback).toBeTypeOf('function');
+      upsert.mockClear();
+      upsert
+        .mockResolvedValueOnce({ error: { message: 'cleanup failed 1' } })
+        .mockResolvedValueOnce({ error: { message: 'cleanup failed 2' } })
+        .mockResolvedValueOnce({ error: { message: 'cleanup failed 3' } })
+        .mockResolvedValueOnce({ error: null });
+      const payload = {
+        current_game_mode: 'pvp',
+        game_edition: 1,
+        tarkov_uid: null,
+        pvp_data: withLegacyTarkovDevProfile(progressWithLevel(2), 12345),
+        pve_data: progressWithLevel(1),
+        updated_at: '2000-01-01T00:00:00.000Z',
+      };
+      callback?.({ new: payload, old: {} });
+      await waitForBackgroundTasks();
+      expect(upsert).toHaveBeenCalledTimes(1);
+      vi.setSystemTime(Date.now() + 3000);
+      callback?.({ new: payload, old: {} });
+      await waitForBackgroundTasks();
+      expect(upsert).toHaveBeenCalledTimes(2);
+      vi.setSystemTime(Date.now() + 3000);
+      callback?.({ new: payload, old: {} });
+      await waitForBackgroundTasks();
+      expect(upsert).toHaveBeenCalledTimes(3);
+      vi.setSystemTime(Date.now() + 3000);
+      callback?.({ new: payload, old: {} });
+      await waitForBackgroundTasks();
+      expect(upsert).toHaveBeenCalledTimes(3);
+      vi.setSystemTime(Date.now() + 30000);
+      callback?.({ new: payload, old: {} });
+      await waitForBackgroundTasks();
+      expect(upsert).toHaveBeenCalledTimes(4);
+      expect(loggerMock.debug).toHaveBeenCalledWith(
+        '[TarkovStore] Cleaned deprecated remote progress payload'
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+  it('skips deprecated remote cleanup writes after session invalidation', async () => {
+    single.mockResolvedValue({
+      data: createRemoteRow(),
+      error: null,
+    });
+    await initializeTarkovSync();
+    const callback = getRealtimeCallback();
+    expect(callback).toBeTypeOf('function');
+    upsert.mockClear();
+    supabaseContext.user.loggedIn = false;
+    supabaseContext.user.id = null;
+    callback?.({
+      new: {
+        current_game_mode: 'pvp',
+        game_edition: 1,
+        tarkov_uid: null,
+        pvp_data: withLegacyTarkovDevProfile(progressWithLevel(2), 12345),
+        pve_data: progressWithLevel(1),
+        updated_at: '2000-01-01T00:00:00.000Z',
+      },
+      old: {},
+    });
+    await waitForBackgroundTasks();
+    expect(upsert).not.toHaveBeenCalled();
+  });
+  it('aborts initialization when post-load cleanup persistence fails', async () => {
+    single.mockResolvedValue({
+      data: createRemoteRow({
+        pvp_data: withLegacyTarkovDevProfile(progressWithLevel(7), 12345),
+      }),
+      error: null,
+    });
+    upsert.mockResolvedValueOnce({
+      error: { message: 'post-load cleanup failed' },
+    });
+    await expect(initializeTarkovSync()).rejects.toThrow('post-load cleanup failed');
+    expect(useSupabaseSyncMock).not.toHaveBeenCalled();
+    expect(loggerMock.error).toHaveBeenCalledWith(
+      '[TarkovStore] Failed to persist post-load data migration/repair:',
+      expect.objectContaining({ message: 'post-load cleanup failed' })
+    );
+  });
   it('shows load_failed and aborts sync for multi-provider account with no progress row', async () => {
     supabaseContext.user.providers = ['discord', 'google'];
     single.mockResolvedValue({

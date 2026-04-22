@@ -135,6 +135,7 @@ Run formatting before committing:
 
 ```bash
 npm run format
+npm run supabase:check
 ```
 
 ## Testing
@@ -147,6 +148,9 @@ npx vitest run
 
 # Watch mode (default)
 npx vitest
+
+# Validate local Supabase migrations
+npm run supabase:check
 
 # API Gateway tests
 npm run test:api-gateway

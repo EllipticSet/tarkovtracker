@@ -161,6 +161,18 @@ describe('useTarkovDevImport', () => {
     await composable.confirmImport('pvp');
     expect(tarkovStore.setGameEdition).toHaveBeenCalledWith(4);
   });
+  it('defaults to level 1 when totalXP is zero', async () => {
+    const parsedData = createImportData({ totalXP: 0 });
+    mockParseTarkovDevProfile.mockReturnValue({
+      data: parsedData,
+      ok: true,
+    });
+    const composable = await loadComposable();
+    await composable.parseFile(createFile('{"aid":123}'));
+    await composable.confirmImport('pvp');
+    expect(mockSetTotalXP).toHaveBeenCalledWith(0);
+    expect(tarkovStore.setLevel).toHaveBeenCalledWith(1);
+  });
   it('sets error state when applying import data throws', async () => {
     const parsedData = createImportData();
     mockParseTarkovDevProfile.mockReturnValue({

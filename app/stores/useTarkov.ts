@@ -80,6 +80,8 @@ const QUOTA_SAFETY_BUFFER_BYTES = 512 * 1024;
 const SYNC_DEBOUNCE_MS = 5000;
 const SELF_ORIGIN_THRESHOLD_MS = 3000;
 const RECENT_LOCAL_SYNC_HISTORY_SIZE = 20;
+const DEPRECATED_REMOTE_CLEANUP_FAST_RETRY_LIMIT = 3;
+const DEPRECATED_REMOTE_CLEANUP_FAILURE_BACKOFF_MS = 30000;
 const SYNC_RESUME_DELAY_MS = 1000;
 const RESET_SETTLE_DELAY_MS = 100;
 const API_UPDATE_FRESHNESS_MS = 30000;
@@ -1174,6 +1176,7 @@ export function resetTarkovSync(
   lastLocalSyncTime = 0;
   deprecatedRemoteCleanupInFlight = false;
   lastDeprecatedRemoteCleanupAttemptAt = 0;
+  deprecatedRemoteCleanupFailureCount = 0;
   recentLocalSyncTimes.length = 0;
   lastApiUpdateIds.pvp = null;
   lastApiUpdateIds.pve = null;
@@ -1438,6 +1441,7 @@ export async function initializeTarkovSync() {
               logger.error('[TarkovStore] Error syncing merged progress to Supabase:', upsertError);
               return { hadRemoteData, needsRemoteCleanup, ok: false };
             }
+            needsRemoteCleanup = false;
           } else {
             logger.debug('[TarkovStore] Startup sync resolved to existing remote state');
             needsRemoteCleanup = remoteHadDeprecatedProgressData;
@@ -1555,11 +1559,15 @@ export async function initializeTarkovSync() {
     if (hasCompletionSchemaMigration || hasRepairChanges || loadResult.needsRemoteCleanup) {
       try {
         recordLocalSyncTime();
-        await $supabase.client
+        const { error: upsertError } = await $supabase.client
           .from('user_progress')
           .upsert(buildUpsertPayload(currentUserId, tarkovStore.$state));
+        if (upsertError) {
+          throw upsertError;
+        }
       } catch (error) {
         logger.error('[TarkovStore] Failed to persist post-load data migration/repair:', error);
+        throw error;
       }
     }
     const startSync = () => {
@@ -1633,6 +1641,7 @@ let realtimeChannel: unknown = null;
 let lastLocalSyncTime = 0; // Track when we last synced locally to filter self-origin updates
 let deprecatedRemoteCleanupInFlight = false;
 let lastDeprecatedRemoteCleanupAttemptAt = 0;
+let deprecatedRemoteCleanupFailureCount = 0;
 const recentLocalSyncTimes: number[] = [];
 const recordLocalSyncTime = () => {
   const now = Date.now();
@@ -1648,6 +1657,10 @@ const isLikelySelfOriginUpdate = (updateTime: number) => {
     return Math.abs(updateTime - syncTime) < SELF_ORIGIN_THRESHOLD_MS;
   });
 };
+const getDeprecatedRemoteCleanupCooldownMs = () =>
+  deprecatedRemoteCleanupFailureCount >= DEPRECATED_REMOTE_CLEANUP_FAST_RETRY_LIMIT
+    ? DEPRECATED_REMOTE_CLEANUP_FAILURE_BACKOFF_MS
+    : SELF_ORIGIN_THRESHOLD_MS;
 const lastApiUpdateIds: { pvp: string | null; pve: string | null } = { pvp: null, pve: null };
 const getToastTranslator = (): ToastTranslate => {
   try {
@@ -1870,10 +1883,14 @@ function setupRealtimeListener() {
           if (deprecatedRemoteCleanupInFlight) {
             return;
           }
+          if (!$supabase.user.loggedIn || $supabase.user.id !== currentUserId) {
+            return;
+          }
           const now = Date.now();
+          const cleanupCooldownMs = getDeprecatedRemoteCleanupCooldownMs();
           if (
             lastDeprecatedRemoteCleanupAttemptAt > 0 &&
-            now - lastDeprecatedRemoteCleanupAttemptAt < SELF_ORIGIN_THRESHOLD_MS
+            now - lastDeprecatedRemoteCleanupAttemptAt < cleanupCooldownMs
           ) {
             return;
           }
@@ -1885,13 +1902,20 @@ function setupRealtimeListener() {
               .from('user_progress')
               .upsert(buildUpsertPayload(currentUserId, nextState));
             if (error) {
+              deprecatedRemoteCleanupFailureCount += 1;
               logger.error(
                 '[TarkovStore] Failed to clean deprecated remote progress payload:',
+                {
+                  cooldownMs: getDeprecatedRemoteCleanupCooldownMs(),
+                  failureCount: deprecatedRemoteCleanupFailureCount,
+                },
                 error
               );
               return;
             }
+            deprecatedRemoteCleanupFailureCount = 0;
             lastDeprecatedRemoteCleanupAttemptAt = 0;
+            logger.debug('[TarkovStore] Cleaned deprecated remote progress payload');
           } finally {
             deprecatedRemoteCleanupInFlight = false;
           }
