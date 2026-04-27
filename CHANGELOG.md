@@ -1,3 +1,10 @@
+# [1.32.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.31.3...v1.32.0) (2026-04-27)
+
+
+### Features
+
+* **settings:** move API tokens into settings tab ([#314](https://github.com/tarkovtracker-org/TarkovTracker/issues/314)) ([04d26a4](https://github.com/tarkovtracker-org/TarkovTracker/commit/04d26a4f9db36b03ed7dea8f6fe0b89b638500f6))
+
 ## [1.31.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.31.2...v1.31.3) (2026-04-27)
 
 
