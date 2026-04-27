@@ -1,3 +1,10 @@
+## [1.31.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.31.2...v1.31.3) (2026-04-27)
+
+
+### Bug Fixes
+
+* **config:** disable nuxt telemetry ([2481f38](https://github.com/tarkovtracker-org/TarkovTracker/commit/2481f387d7ae1efbfe0c4fa88ba2aa4385a3cf9d))
+
 ## [1.31.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.31.1...v1.31.2) (2026-04-24)
 
 
