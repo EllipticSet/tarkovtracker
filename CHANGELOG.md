@@ -1,3 +1,10 @@
+## [1.33.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.33.0...v1.33.1) (2026-04-28)
+
+
+### Bug Fixes
+
+* **ui:** remove stale SelectMenu width overrides ([964d825](https://github.com/tarkovtracker-org/TarkovTracker/commit/964d825b0362f298a2cba08ab298485d1bd5dc5d))
+
 # [1.33.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.32.0...v1.33.0) (2026-04-28)
 
 
