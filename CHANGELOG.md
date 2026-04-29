@@ -1,3 +1,10 @@
+## [1.33.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.33.1...v1.33.2) (2026-04-29)
+
+
+### Bug Fixes
+
+* **ci:** allow Nuxt dependabot auto-merge ([3f2b21e](https://github.com/tarkovtracker-org/TarkovTracker/commit/3f2b21eb7356ccc9af3a95d213ebb5a39d84d3ec))
+
 ## [1.33.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.33.0...v1.33.1) (2026-04-28)
 
 
