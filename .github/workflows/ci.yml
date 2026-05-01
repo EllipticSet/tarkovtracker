@@ -31,8 +31,15 @@ jobs:
       - name: Format check
         run: npm run format:check
 
-      - name: Test
-        run: npm run test
+      - name: Test with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage to CodeAnt AI
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: CodeAnt-AI/codeant-coverage-action@0d670ed6f27284867ef4373f2a9a568a5aeffce2
+        with:
+          access_token: ${{ secrets.ACCESS_TOKEN_GITHUB }}
+          coverage_file: coverage/cobertura-coverage.xml
 
       - name: Build
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork != true

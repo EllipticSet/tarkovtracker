@@ -7,7 +7,7 @@ Automated CI/CD and maintenance workflows for TarkovTracker.
 ### CI (`ci.yml`)
 
 **Trigger:** Push to main/develop/wip branches, PRs
-**Jobs:** `Validate` (lint, typecheck, format, test, build), `Supabase DB` (reset + lint local migrations), `Workers` (validate api-gateway)
+**Jobs:** `Validate` (lint, typecheck, format, coverage, CodeAnt upload, build), `Supabase DB` (reset + lint local migrations), `Workers` (validate api-gateway)
 
 ### Security (`security.yml`)
 
@@ -51,7 +51,7 @@ the current floors as long-term targets.
 
 ## Secrets
 
-Workflow-specific secrets are not required for the Gitleaks step anymore. The workflow downloads a pinned Gitleaks release and verifies its published checksum before scanning. App build jobs still use the existing Nuxt/Supabase secrets configured for CI and release.
+Workflow-specific secrets are not required for the Gitleaks step anymore. The workflow downloads a pinned Gitleaks release and verifies its published checksum before scanning. App build jobs still use the existing Nuxt/Supabase secrets configured for CI and release. CodeAnt coverage upload requires `ACCESS_TOKEN_GITHUB` with the repository access documented by CodeAnt.
 
 ## Commands
 

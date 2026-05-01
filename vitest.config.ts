@@ -25,12 +25,14 @@ export default defineVitestConfig({
     fileParallelism: false,
     maxConcurrency: 1,
     testTimeout: 30000,
+    hookTimeout: 60000,
     watch: false,
     reporters: ['default'],
     passWithNoTests: false,
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json-summary', 'lcov'],
+      reportsDirectory: './coverage',
+      reporter: ['text', 'json-summary', 'lcov', 'cobertura'],
       include: ['app/**/*.{ts,vue}'],
       exclude: ['app/**/*.d.ts', 'app/**/__tests__/**'],
       thresholds: {

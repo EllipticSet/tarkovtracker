@@ -115,6 +115,7 @@
     "supabase:check": "bash scripts/check-supabase-db.sh",
     "supabase:types": "supabase gen types typescript --linked > supabase/functions/_shared/database.types.ts",
     "test": "vitest run --reporter=default --maxWorkers=2",
+    "test:coverage": "vitest run --coverage --reporter=default --maxWorkers=2",
     "test:watch": "vitest --watch",
     "test:api-gateway": "vitest --config workers/api-gateway/vitest.config.ts",
     "validate:openapi": "npm --prefix workers/api-gateway run validate:openapi"
