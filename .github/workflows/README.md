@@ -37,7 +37,7 @@ the current floors as long-term targets.
 ### Stale (`stale.yml`)
 
 **Trigger:** Daily schedule
-**Jobs:** Mark and close stale issues/PRs
+**Jobs:** Mark inactive issues/PRs stale, then close stale items unless labeled `never-stale`
 
 ## Check Count
 
