@@ -1,3 +1,10 @@
+## [1.33.3](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.33.2...v1.33.3) (2026-05-01)
+
+
+### Bug Fixes
+
+* **config:** add never-stale escape for stale auto-close ([574675c](https://github.com/tarkovtracker-org/TarkovTracker/commit/574675c865dcc38d78a05419d28f0018bc764ffb))
+
 ## [1.33.2](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.33.1...v1.33.2) (2026-04-29)
 
 
