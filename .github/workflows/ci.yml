@@ -35,7 +35,7 @@ jobs:
         run: npm run test:coverage
 
       - name: Upload coverage to CodeAnt AI
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.secret_source == 'Actions'
         uses: CodeAnt-AI/codeant-coverage-action@0d670ed6f27284867ef4373f2a9a568a5aeffce2
         with:
           access_token: ${{ secrets.ACCESS_TOKEN_GITHUB }}
