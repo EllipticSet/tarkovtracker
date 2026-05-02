@@ -14,10 +14,26 @@ const createMetadataStore = (
   objectives,
   objectiveMaps,
 });
-const createPreferencesStore = (mapView = 'customs') => ({
-  getTaskMapView: mapView,
-  setTaskMapView: vi.fn(),
-});
+const createPreferencesStore = (mapView = 'customs') => {
+  const normalizeMapView = (value: unknown): string => {
+    const candidate =
+      typeof value === 'string'
+        ? value
+        : value && typeof value === 'object' && 'value' in value
+          ? (value as { value?: unknown }).value
+          : null;
+    return typeof candidate === 'string' && candidate.length > 0 ? candidate : 'all';
+  };
+  let taskMapView = normalizeMapView(mapView);
+  return {
+    get getTaskMapView() {
+      return normalizeMapView(taskMapView);
+    },
+    setTaskMapView: vi.fn((nextMapView: string) => {
+      taskMapView = normalizeMapView(nextMapView);
+    }),
+  };
+};
 const mockSetup = (options?: {
   objectives?: Parameters<typeof createMetadataStore>[0];
   objectiveMaps?: Parameters<typeof createMetadataStore>[1];
@@ -185,6 +201,34 @@ describe('useMapObjectivePopup', () => {
       const { result, wrapper } = await setupComposable(mocks);
       await result.jumpToMapObjective('obj-1');
       expect(mocks.preferencesStore.setTaskMapView).not.toHaveBeenCalled();
+      result.cleanup();
+      wrapper.unmount();
+    });
+    it('ignores stale delayed jumps when a newer objective is selected', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: false });
+      const mocks = mockSetup({
+        objectives: [
+          { id: 'obj-a', taskId: 'task-1' },
+          { id: 'obj-b', taskId: 'task-1' },
+        ],
+        objectiveMaps: {
+          'task-1': [
+            { objectiveID: 'obj-a', mapID: 'woods' },
+            { objectiveID: 'obj-b', mapID: 'woods' },
+          ],
+        },
+        mapView: 'customs',
+        activateResult: true,
+      });
+      const { result, wrapper } = await setupComposable(mocks);
+      const firstJump = result.jumpToMapObjective('obj-a');
+      const secondJump = result.jumpToMapObjective('obj-b');
+      await secondJump;
+      expect(mocks.activateObjectivePopup).toHaveBeenCalledTimes(1);
+      expect(mocks.activateObjectivePopup).toHaveBeenCalledWith('obj-b');
+      await vi.advanceTimersByTimeAsync(100);
+      await firstJump;
+      expect(mocks.activateObjectivePopup).toHaveBeenCalledTimes(1);
       result.cleanup();
       wrapper.unmount();
     });
