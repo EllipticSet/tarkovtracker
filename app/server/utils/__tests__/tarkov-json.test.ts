@@ -63,6 +63,45 @@ describe('fetchTarkovJsonEndpoint', () => {
     );
     expect(result.tasks.task1?.name).toBe('Debut');
   });
+  it('falls back to English translations when the primary language fetch fails', async () => {
+    const fetcher = createFetcher({
+      'https://json.tarkov.dev/regular/tasks': {
+        data: { tasks: { task1: { id: 'task1', name: 'task.name' } } },
+        translations: ['$.data.tasks.*.name'],
+      },
+      'https://json.tarkov.dev/regular/tasks_de': new Error('missing translation file'),
+      'https://json.tarkov.dev/regular/tasks_en': {
+        data: { 'task.name': 'Debut' },
+      },
+    });
+    const result = await fetchTarkovJsonEndpoint<{ tasks: Record<string, { name: string }> }>(
+      'tasks',
+      {
+        deps: { fetcher, logger: { error: vi.fn(), warn: vi.fn() }, sleep: vi.fn() },
+        lang: 'de',
+        maxRetries: 1,
+      }
+    );
+    expect(result.tasks.task1?.name).toBe('Debut');
+  });
+  it('returns base data when the English translation fetch fails', async () => {
+    const fetcher = createFetcher({
+      'https://json.tarkov.dev/regular/items': {
+        data: { items: { item1: { id: 'item1', name: 'item.name' } } },
+        translations: ['$.data.items.*.name'],
+      },
+      'https://json.tarkov.dev/regular/items_en': new Error('missing translation file'),
+    });
+    const result = await fetchTarkovJsonEndpoint<{ items: Record<string, { name: string }> }>(
+      'items',
+      {
+        deps: { fetcher, logger: { error: vi.fn(), warn: vi.fn() }, sleep: vi.fn() },
+        lang: 'en',
+        maxRetries: 1,
+      }
+    );
+    expect(result.items.item1?.name).toBe('item.name');
+  });
   it('keeps the translation key when no translation exists', async () => {
     const fetcher = createFetcher({
       'https://json.tarkov.dev/regular/maps': {

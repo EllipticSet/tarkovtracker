@@ -26,6 +26,7 @@ const TARKOV_JSON_BASE_URL = 'https://json.tarkov.dev';
 const DEFAULT_TIMEOUT_MS = 30000;
 const DEFAULT_MAX_RETRIES = 3;
 const ENGLISH_LANGUAGE = 'en';
+const PRESTIGE_SOURCE_GAME_MODE = 'regular';
 type JsonRecord = Record<string, unknown>;
 type TarkovJsonEndpoint = 'hideout' | 'items' | 'maps' | 'tasks' | 'traders';
 type TarkovJsonEnvelope<T = unknown> = {
@@ -55,6 +56,7 @@ type TarkovJsonOptions = {
   timeoutMs?: number;
   deps?: TarkovJsonDependencies;
 };
+type TarkovJsonPrestigeOptions = Omit<TarkovJsonOptions, 'gameMode'>;
 type JsonPathResult = {
   parent?: unknown;
   parentProperty?: string | number;
@@ -163,14 +165,14 @@ async function fetchEnvelope<T>(
       const isLastAttempt = attempt === maxRetries;
       if (isLastAttempt) {
         fetcherLogger.error(`[TarkovJson] All ${maxRetries} attempts failed`, {
-          error: lastError.message,
+          error: lastError,
           path,
         });
       } else {
         const delayMs = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
         fetcherLogger.warn(
           `[TarkovJson] Attempt ${attempt}/${maxRetries} failed, retrying in ${delayMs}ms`,
-          { error: lastError.message, path }
+          { error: lastError, path }
         );
         await sleep(delayMs);
       }
@@ -183,7 +185,8 @@ function applyTranslations<T>(
   primaryTranslations?: JsonRecord,
   fallbackTranslations?: JsonRecord
 ): T {
-  if (!primaryTranslations) return response.data;
+  const translations = primaryTranslations ?? fallbackTranslations;
+  if (!translations) return response.data;
   const translatedResponse = structuredClone(response) as TarkovJsonEnvelope<T>;
   for (const path of response.translations ?? []) {
     try {
@@ -198,7 +201,7 @@ function applyTranslations<T>(
           const translationKey = result.value;
           if (typeof translationKey !== 'string') return;
           result.parent[parentProperty] =
-            primaryTranslations[translationKey] ??
+            translations[translationKey] ??
             fallbackTranslations?.[translationKey] ??
             translationKey;
         },
@@ -217,14 +220,18 @@ export async function fetchTarkovJsonEndpoint<T>(
   options: TarkovJsonOptions = {}
 ): Promise<T> {
   const lang = options.lang?.trim() || ENGLISH_LANGUAGE;
-  const [baseResponse, primaryResponse, fallbackResponse] = await Promise.all([
-    fetchEnvelope<T>(buildPath(endpoint, options), options),
+  const baseResponse = await fetchEnvelope<T>(buildPath(endpoint, options), options);
+  const [primaryResponse, fallbackResponse] = await Promise.allSettled([
     fetchEnvelope<JsonRecord>(buildPath(endpoint, options, lang), options),
     lang === ENGLISH_LANGUAGE
       ? Promise.resolve(undefined)
       : fetchEnvelope<JsonRecord>(buildPath(endpoint, options, ENGLISH_LANGUAGE), options),
   ]);
-  return applyTranslations(baseResponse, primaryResponse.data, fallbackResponse?.data);
+  return applyTranslations(
+    baseResponse,
+    primaryResponse.status === 'fulfilled' ? primaryResponse.value.data : undefined,
+    fallbackResponse.status === 'fulfilled' ? fallbackResponse.value?.data : undefined
+  );
 }
 function adaptCategoryRef(value: unknown, context: AdapterContext) {
   const raw = readRecordRef(value, context.itemCategoriesById);
@@ -815,8 +822,8 @@ export function createTarkovJsonHideoutFetcher(options: TarkovJsonOptions) {
     return adaptHideoutResponse(hideoutPayload, { itemsPayload, tradersPayload });
   };
 }
-export function createTarkovJsonPrestigeFetcher(options: TarkovJsonOptions) {
-  const regularOptions = { ...options, gameMode: 'regular' as const };
+export function createTarkovJsonPrestigeFetcher(options: TarkovJsonPrestigeOptions) {
+  const regularOptions: TarkovJsonOptions = { ...options, gameMode: PRESTIGE_SOURCE_GAME_MODE };
   return async () => {
     const [tasksPayload, itemsPayload, hideoutPayload, tradersPayload] = await Promise.all([
       fetchTarkovJsonEndpoint<JsonTasksPayload>('tasks', regularOptions),

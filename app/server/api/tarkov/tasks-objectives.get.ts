@@ -14,8 +14,15 @@ export default defineEventHandler(async (event) => {
   const cacheKey = `tasks-objectives-${TASK_OBJECTIVES_CACHE_VERSION}-${lang}-${gameMode}`;
   const baseFetcher = createTarkovJsonTaskObjectivesFetcher({ gameMode, lang });
   const fetcher = async () => {
+    let baseResponse: Awaited<ReturnType<typeof baseFetcher>>;
     try {
-      return await applyOverlay(await baseFetcher(), { bypassCache, gameMode });
+      baseResponse = await baseFetcher();
+    } catch (error) {
+      logger.error('Failed to fetch task objectives data:', error);
+      throw error;
+    }
+    try {
+      return await applyOverlay(baseResponse, { bypassCache, gameMode });
     } catch (overlayError) {
       logger.error('Failed to apply overlay:', overlayError);
       throw overlayError;

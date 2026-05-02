@@ -210,7 +210,6 @@ describe('Tarkov API handlers', () => {
     const { default: handler } = await import('@/server/api/tarkov/prestige.get');
     await handler(event);
     expect(mockCreateTarkovJsonPrestigeFetcher).toHaveBeenCalledWith({
-      gameMode: 'regular',
       lang: 'en',
     });
     expect(mockEdgeCache).toHaveBeenCalledWith(

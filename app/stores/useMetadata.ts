@@ -69,10 +69,15 @@ type IdleTask = {
   reject: (error: unknown) => void;
   expiresAt: number;
 };
-const BOOTSTRAP_CACHE_VERSION = 'json-v1';
-const TASK_OBJECTIVES_CACHE_VERSION = 'json-v1';
-const PRESTIGE_CACHE_VERSION = 'json-v1';
-const ITEMS_CACHE_VERSION = 'json-v1';
+const JSON_STATIC_DATA_CACHE_VERSION = 'json-v1';
+const BOOTSTRAP_CACHE_VERSION = JSON_STATIC_DATA_CACHE_VERSION;
+const TASKS_CORE_CACHE_VERSION = JSON_STATIC_DATA_CACHE_VERSION;
+const MAP_SPAWNS_CACHE_VERSION = JSON_STATIC_DATA_CACHE_VERSION;
+const TASK_OBJECTIVES_CACHE_VERSION = JSON_STATIC_DATA_CACHE_VERSION;
+const TASK_REWARDS_CACHE_VERSION = JSON_STATIC_DATA_CACHE_VERSION;
+const HIDEOUT_CACHE_VERSION = JSON_STATIC_DATA_CACHE_VERSION;
+const PRESTIGE_CACHE_VERSION = JSON_STATIC_DATA_CACHE_VERSION;
+const ITEMS_CACHE_VERSION = JSON_STATIC_DATA_CACHE_VERSION;
 const idleQueue: IdleTask[] = [];
 let idleRunnerActive = false;
 const CACHE_PURGE_STORAGE_KEY = STORAGE_KEYS.cachePurgeAt;
@@ -710,12 +715,12 @@ export const useMetadataStore = defineStore('metadata', {
         const [tasksCore, hideout, prestige, editions] = await Promise.all([
           getCachedData<TarkovTasksCoreQueryResult>(
             'tasks-core' as CacheType,
-            `json-v1-${apiGameMode}`,
+            `${TASKS_CORE_CACHE_VERSION}-${apiGameMode}`,
             this.languageCode
           ),
           getCachedData<TarkovHideoutQueryResult>(
             'hideout' as CacheType,
-            `json-v1-${apiGameMode}`,
+            `${HIDEOUT_CACHE_VERSION}-${apiGameMode}`,
             this.languageCode
           ),
           getCachedData<TarkovPrestigeQueryResult>(
@@ -1139,7 +1144,7 @@ export const useMetadataStore = defineStore('metadata', {
       const apiGameMode = this.getApiGameMode();
       await this.fetchWithCache<TarkovTasksCoreQueryResult>({
         cacheType: 'tasks-core' as CacheType,
-        cacheKey: `json-v1-${apiGameMode}`,
+        cacheKey: `${TASKS_CORE_CACHE_VERSION}-${apiGameMode}`,
         endpoint: '/api/tarkov/tasks-core',
         queryParams: { lang: this.languageCode, gameMode: apiGameMode },
         cacheTTL: CACHE_CONFIG.DEFAULT_TTL,
@@ -1158,7 +1163,7 @@ export const useMetadataStore = defineStore('metadata', {
       const apiGameMode = this.getApiGameMode();
       await this.fetchWithCache<TarkovMapSpawnsQueryResult>({
         cacheType: 'map-spawns' as CacheType,
-        cacheKey: `json-v1-${apiGameMode}`,
+        cacheKey: `${MAP_SPAWNS_CACHE_VERSION}-${apiGameMode}`,
         endpoint: '/api/tarkov/map-spawns',
         queryParams: { lang: this.languageCode, gameMode: apiGameMode },
         cacheTTL: CACHE_CONFIG.DEFAULT_TTL,
@@ -1320,7 +1325,7 @@ export const useMetadataStore = defineStore('metadata', {
       const apiGameMode = this.getApiGameMode();
       await this.fetchWithCache<TarkovTaskRewardsQueryResult>({
         cacheType: 'tasks-rewards' as CacheType,
-        cacheKey: `json-v1-${apiGameMode}`,
+        cacheKey: `${TASK_REWARDS_CACHE_VERSION}-${apiGameMode}`,
         endpoint: '/api/tarkov/tasks-rewards',
         queryParams: { lang: this.languageCode, gameMode: apiGameMode },
         cacheTTL: CACHE_CONFIG.DEFAULT_TTL,
@@ -1340,7 +1345,7 @@ export const useMetadataStore = defineStore('metadata', {
       const apiGameMode = this.getApiGameMode();
       await this.fetchWithCache<TarkovHideoutQueryResult>({
         cacheType: 'hideout' as CacheType,
-        cacheKey: `json-v1-${apiGameMode}`,
+        cacheKey: `${HIDEOUT_CACHE_VERSION}-${apiGameMode}`,
         endpoint: '/api/tarkov/hideout',
         queryParams: { lang: this.languageCode, gameMode: apiGameMode },
         cacheTTL: CACHE_CONFIG.DEFAULT_TTL,

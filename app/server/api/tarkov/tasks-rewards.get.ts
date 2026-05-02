@@ -15,12 +15,12 @@ export default defineEventHandler(async (event) => {
   const cacheKey = `tasks-rewards-${TASK_REWARDS_CACHE_VERSION}-${lang}-${gameMode}`;
   const baseFetcher = createTarkovJsonTaskRewardsFetcher({ gameMode, lang });
   const fetcher = async () => {
-    const sanitizedResponse = sanitizeTaskRewards(await baseFetcher());
     try {
+      const sanitizedResponse = sanitizeTaskRewards(await baseFetcher());
       return await applyOverlay(sanitizedResponse, { bypassCache, gameMode });
-    } catch (overlayError) {
-      logger.error('Failed to apply overlay:', overlayError);
-      throw overlayError;
+    } catch (error) {
+      logger.error('Failed to build tasks rewards response:', error);
+      throw error;
     }
   };
   return await edgeCache(event, cacheKey, fetcher, CACHE_TTL_DEFAULT, { cacheKeyPrefix: 'tarkov' });
