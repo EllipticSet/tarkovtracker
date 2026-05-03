@@ -41,9 +41,8 @@ function routeMatchesPattern(route: string, pattern: string): boolean {
 function isPublicRoute(pathname: string, publicRoutes: string[]): boolean {
   return publicRoutes.some((pattern) => routeMatchesPattern(pathname, pattern));
 }
-function isAlwaysProtectedRoute(pathname: string): boolean {
-  const normalized = pathname.replace(/\/+$/, '');
-  return normalized === '/api/tarkov/cache-meta';
+function isAlwaysProtectedRoute(_pathname: string): boolean {
+  return false;
 }
 function ipInRange(clientIp: string, range: string): boolean {
   try {
