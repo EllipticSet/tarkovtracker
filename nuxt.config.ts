@@ -112,6 +112,8 @@ export default defineNuxtConfig({
       ) || 1800000,
     githubTimeoutMs:
       Number(process.env.NUXT_GITHUB_TIMEOUT_MS || process.env.GITHUB_TIMEOUT_MS || '8000') || 8000,
+    tarkovJsonBaseUrl:
+      process.env.NUXT_TARKOV_JSON_BASE_URL || process.env.TARKOV_JSON_BASE_URL || '',
     logSinkUrl: process.env.NUXT_LOG_SINK_URL || process.env.LOG_SINK_URL || '',
     teamMembersCacheTtlMs:
       Number(

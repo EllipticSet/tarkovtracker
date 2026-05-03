@@ -12,9 +12,12 @@ describe('useMetadataStore fetchPrestigeData', () => {
     await store.fetchPrestigeData();
     expect(fetchWithCacheSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        cacheKey: 'all-v2',
+        cacheLanguage: 'en',
+        cacheKey: 'all-json-v1',
         cacheType: 'prestige',
         endpoint: '/api/tarkov/prestige',
+        promiseKey: 'prestigePromise',
+        promiseRequestKey: 'en',
       })
     );
   });
