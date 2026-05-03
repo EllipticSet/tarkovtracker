@@ -55,8 +55,6 @@ export function useAppInitialization() {
   let syncStarted = false;
   let migrationAttempted = false;
   let authChangeToken = 0;
-  // resetTarkovState keeps the existing (reason, previousUserId) call signature while forwarding
-  // to resetTarkovStoreForSessionTransition(previousUserId, reason).
   const resetTarkovState = (reason: string, previousUserId: string | null = null) => {
     resetTarkovStoreForSessionTransition(previousUserId, reason);
   };
@@ -81,14 +79,16 @@ export function useAppInitialization() {
       showLoadFailed();
     }
   };
-  const runMigrationIfNeeded = async (expectedUserId?: string) => {
+  const runMigrationIfNeeded = async (expectedUserId?: string, expectedToken?: number) => {
     const authenticatedUserId = getAuthenticatedUserId();
     if (expectedUserId && authenticatedUserId !== expectedUserId) return;
+    if (expectedToken !== undefined && expectedToken !== authChangeToken) return;
     if (!authenticatedUserId || migrationAttempted) return;
     try {
       const store = useTarkovStore();
       await store.migrateDataIfNeeded?.();
       if (expectedUserId && getAuthenticatedUserId() !== expectedUserId) return;
+      if (expectedToken !== undefined && expectedToken !== authChangeToken) return;
       migrationAttempted = true;
     } catch (error) {
       migrationAttempted = false;
@@ -119,7 +119,7 @@ export function useAppInitialization() {
       }
       await startSyncIfNeeded(userId, token);
       if (token !== authChangeToken) return;
-      await runMigrationIfNeeded(userId);
+      await runMigrationIfNeeded(userId, token);
     },
     { immediate: true }
   );
