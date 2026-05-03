@@ -1,39 +1,38 @@
 const STATUS_MESSAGE_MAX_LENGTH = 160;
 const REDACTED_PLACEHOLDER = '[redacted]';
-// lgtm[js/redos] -- False positive: static anchored literal key patterns only.
-const SENSITIVE_VARIABLE_PATTERNS = [
-  '^access_token$',
-  '^api_?key$',
-  '^apikey$',
-  '^auth$',
-  '^authorization$',
-  '^bearer$',
-  '^card$',
-  '^ccnum$',
-  '^client_secret$',
-  '^credential$',
-  '^credit_card$',
-  '^cvv$',
-  '^dob$',
-  '^email$',
-  '^id_token$',
-  '^otp$',
-  '^passwd$',
-  '^password$',
-  '^phone$',
-  '^pin$',
-  '^private_key$',
-  '^pwd$',
-  '^refresh$',
-  '^secret$',
-  '^session$',
-  '^signature$',
-  '^ssn$',
-  '^token$',
-  '^user_?id$',
-  '^userid$',
+const SENSITIVE_VARIABLE_REGEX = [
+  /^accesstoken$/,
+  /^apikey$/,
+  /^auth$/,
+  /^authorization$/,
+  /^bearer$/,
+  /^card$/,
+  /^ccnum$/,
+  /^clientsecret$/,
+  /^credential$/,
+  /^creditcard$/,
+  /^cvv$/,
+  /^dob$/,
+  /^email$/,
+  /^idtoken$/,
+  /^otp$/,
+  /^passwd$/,
+  /^password$/,
+  /^phone$/,
+  /^pin$/,
+  /^privatekey$/,
+  /^pwd$/,
+  /^refresh$/,
+  /^secret$/,
+  /^session$/,
+  /^signature$/,
+  /^ssn$/,
+  /^token$/,
+  /^userid$/,
 ];
-const SENSITIVE_VARIABLE_REGEX = SENSITIVE_VARIABLE_PATTERNS.map((pattern) => new RegExp(pattern));
+const normalizeSensitiveKey = (key: string): string => {
+  return key.replace(/[^a-z0-9]/gi, '').toLowerCase();
+};
 const isPlainObject = (value: unknown): value is Record<string, unknown> => {
   if (!value || typeof value !== 'object') return false;
   const proto = Object.getPrototypeOf(value);
@@ -89,7 +88,7 @@ export function sanitizeVariables(variables: Record<string, unknown>): Record<st
     if (isPlainObject(value)) {
       const sanitized: Record<string, unknown> = {};
       for (const [key, entry] of Object.entries(value)) {
-        const normalizedKey = key.toLowerCase();
+        const normalizedKey = normalizeSensitiveKey(key);
         const shouldRedact = SENSITIVE_VARIABLE_REGEX.some((regex) => regex.test(normalizedKey));
         sanitized[key] = shouldRedact ? REDACTED_PLACEHOLDER : sanitizeValue(entry);
       }
