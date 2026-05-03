@@ -1,3 +1,20 @@
+# [1.34.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.33.4...v1.34.0) (2026-05-03)
+
+
+### Bug Fixes
+
+* **app:** address follow-up review feedback ([477f78b](https://github.com/tarkovtracker-org/TarkovTracker/commit/477f78bcfbe12e1530934a9c3b19f7ef15ce1a5b))
+* **api:** address json migration review feedback ([166d85d](https://github.com/tarkovtracker-org/TarkovTracker/commit/166d85d09319e54d4b6efd1d8042525415b0995e))
+* **api:** address json migration review follow-ups ([b118c47](https://github.com/tarkovtracker-org/TarkovTracker/commit/b118c471cf0d47dfe6fb8c01b6522f8b7f56f100))
+* **app:** address pr review feedback ([3528e9c](https://github.com/tarkovtracker-org/TarkovTracker/commit/3528e9c22f2cd4180e0d997c072d21ac29e7a459))
+* **app:** guard stale metadata responses ([92c9d4b](https://github.com/tarkovtracker-org/TarkovTracker/commit/92c9d4b2cc000165585ba7efb99ded51514c81d8))
+* **app:** refine metadata request cleanup ([ece772a](https://github.com/tarkovtracker-org/TarkovTracker/commit/ece772a638ddfdbfb4c828563063b73b6452a75b))
+
+
+### Features
+
+* **api:** migrate tarkov static data to json ([a27cce4](https://github.com/tarkovtracker-org/TarkovTracker/commit/a27cce4e3cdfe72cf93be224b75af8f5776e37ab))
+
 ## [1.33.4](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.33.3...v1.33.4) (2026-05-02)
 
 
