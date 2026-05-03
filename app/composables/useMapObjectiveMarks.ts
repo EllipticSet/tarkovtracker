@@ -59,10 +59,11 @@ export function useMapObjectiveMarks({
           users.push('self');
         }
         for (const tmId of teammateIds) {
+          const taskUnlocked = unlockedTasks.value[task.id]?.[tmId] === true;
           const objDone = objectiveCompletions.value[obj.id]?.[tmId] === true;
           const taskDone = tasksCompletions.value[task.id]?.[tmId] === true;
           const taskFailed = tasksFailed.value[task.id]?.[tmId] === true;
-          if (!objDone && !taskDone && !taskFailed) {
+          if (taskUnlocked && !objDone && !taskDone && !taskFailed) {
             teammateUsers.push(tmId);
           }
         }
