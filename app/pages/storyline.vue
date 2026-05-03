@@ -60,12 +60,14 @@
   definePageMeta({
     layout: 'default',
   });
-  useSeoMeta({
-    title: computed(() => t('page.storyline.title')),
-    description: computed(() => t('page.storyline.subtitle')),
-    ogTitle: computed(() => t('page.storyline.title')),
-    ogDescription: computed(() => t('page.storyline.subtitle')),
-  });
+  useHead(() => ({
+    title: t('page.storyline.title'),
+    meta: [
+      { name: 'description', content: t('page.storyline.subtitle') },
+      { property: 'og:title', content: t('page.storyline.title') },
+      { property: 'og:description', content: t('page.storyline.subtitle') },
+    ],
+  }));
   const tarkovStore = useTarkovStore();
   const { chapters, normalizedChapters: storylineChapters } = useStorylineChapters();
   const totalChapters = computed(() => storylineChapters.value.length);
