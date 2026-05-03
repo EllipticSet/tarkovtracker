@@ -29,9 +29,13 @@ import type { Store } from 'pinia';
 function getGameModeData(store: Store<string, UserState> | undefined): UserProgressData {
   if (!store) return createDefaultOwnedProgressData();
   const currentGameMode = store.$state.currentGameMode;
-  if (currentGameMode === GAME_MODES.PVP) return store.$state.pvp;
-  if (currentGameMode === GAME_MODES.PVE) return store.$state.pve;
-  return createDefaultOwnedProgressData();
+  const modeData =
+    currentGameMode === GAME_MODES.PVP
+      ? store.$state.pvp
+      : currentGameMode === GAME_MODES.PVE
+        ? store.$state.pve
+        : undefined;
+  return modeData ?? createDefaultOwnedProgressData();
 }
 type TeamStoresMap = Record<string, Store<string, UserState>>;
 type CompletionsMap = Record<string, Record<string, boolean>>;

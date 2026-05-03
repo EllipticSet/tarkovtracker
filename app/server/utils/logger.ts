@@ -67,8 +67,11 @@ function resolveLogSinkUrl(): string {
     const runtimeConfig = useRuntimeConfig();
     const runtimeSink = runtimeConfig?.logSinkUrl;
     if (typeof runtimeSink === 'string' && runtimeSink.trim().length > 0) {
-      cachedLogSinkUrl = normalizeFetchTargetUrl(runtimeSink.trim());
-      return cachedLogSinkUrl;
+      const normalizedRuntimeSink = normalizeFetchTargetUrl(runtimeSink.trim());
+      if (normalizedRuntimeSink) {
+        cachedLogSinkUrl = normalizedRuntimeSink;
+        return cachedLogSinkUrl;
+      }
     }
   } catch {
     cachedLogSinkUrl = '';

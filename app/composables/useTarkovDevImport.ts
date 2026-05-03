@@ -54,6 +54,7 @@ export function useTarkovDevImport(): UseTarkovDevImportReturn {
     return true;
   }
   async function parseFile(file: File): Promise<void> {
+    profileUrlRequestId++;
     importState.value = 'loading';
     previewData.value = null;
     importError.value = null;
