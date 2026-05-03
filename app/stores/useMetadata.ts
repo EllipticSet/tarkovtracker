@@ -202,6 +202,7 @@ type MutablePromiseStore = {
 };
 const storePromises = new WeakMap<object, MutablePromiseStore>();
 const storePromiseRequestKeys = new WeakMap<object, Partial<Record<PromiseKey, string>>>();
+const storePromiseRequestIds = new WeakMap<object, Partial<Record<PromiseKey, symbol>>>();
 function getPromiseStore(storeInstance: object): MutablePromiseStore {
   let promises = storePromises.get(storeInstance);
   if (!promises) {
@@ -231,6 +232,14 @@ function getPromiseRequestKeyStore(storeInstance: object): Partial<Record<Promis
     storePromiseRequestKeys.set(storeInstance, keys);
   }
   return keys;
+}
+function getPromiseRequestIdStore(storeInstance: object): Partial<Record<PromiseKey, symbol>> {
+  let ids = storePromiseRequestIds.get(storeInstance);
+  if (!ids) {
+    ids = {};
+    storePromiseRequestIds.set(storeInstance, ids);
+  }
+  return ids;
 }
 // Helper type to safely access item properties that might be missing in older type definitions
 type ObjectiveWithItems = TaskObjective & {
@@ -792,6 +801,7 @@ export const useMetadataStore = defineStore('metadata', {
       if (promiseKey) {
         const promises = getPromiseStore(this);
         const requestKeys = getPromiseRequestKeyStore(this);
+        const requestIds = getPromiseRequestIdStore(this);
         const existing = promises[promiseKey];
         if (
           existing &&
@@ -800,19 +810,22 @@ export const useMetadataStore = defineStore('metadata', {
         ) {
           return await existing;
         }
-        const promise = this._doFetchWithCache<T>(config);
-        promises[promiseKey] = promise;
+        const promiseRequestId = Symbol(promiseKey);
         if (promiseRequestKey) {
           requestKeys[promiseKey] = promiseRequestKey;
         } else {
           requestKeys[promiseKey] = undefined;
         }
+        requestIds[promiseKey] = promiseRequestId;
+        const promise = this._doFetchWithCache<T>({ ...config, promiseRequestId });
+        promises[promiseKey] = promise;
         try {
           await promise;
         } finally {
           if (promises[promiseKey] === promise) {
             promises[promiseKey] = null;
             requestKeys[promiseKey] = undefined;
+            requestIds[promiseKey] = undefined;
           }
         }
         return;
@@ -847,6 +860,7 @@ export const useMetadataStore = defineStore('metadata', {
       forceRefresh?: boolean;
       promiseKey?: PromiseKey;
       promiseRequestKey?: string;
+      promiseRequestId?: symbol;
       throwOnError?: boolean;
     }): Promise<void> {
       const perfTimer = perfStart(`[Metadata] fetch ${config.logName}`, {
@@ -878,11 +892,21 @@ export const useMetadataStore = defineStore('metadata', {
         forceRefresh = false,
         promiseKey,
         promiseRequestKey,
+        promiseRequestId,
         throwOnError = false,
       } = config;
       const isCurrentRequestContext = (): boolean => {
-        if (!promiseKey || !promiseRequestKey) return true;
-        return getPromiseRequestKeyStore(this)[promiseKey] === promiseRequestKey;
+        if (!promiseKey) return true;
+        if (promiseRequestId && getPromiseRequestIdStore(this)[promiseKey] !== promiseRequestId) {
+          return false;
+        }
+        if (
+          promiseRequestKey &&
+          getPromiseRequestKeyStore(this)[promiseKey] !== promiseRequestKey
+        ) {
+          return false;
+        }
+        return true;
       };
       // Reset error state if tracking errors
       if (errorKey) {
@@ -896,6 +920,11 @@ export const useMetadataStore = defineStore('metadata', {
             logger.debug(
               `[MetadataStore] ${logName} loaded from cache: ${cacheLanguage}-${cacheKey}`
             );
+            if (!isCurrentRequestContext()) {
+              perfSource = 'skipped';
+              endPerf({ cached: true, stale: true });
+              return;
+            }
             processData(cached);
             perfSource = 'cache';
             endPerf({ cached: true });
@@ -958,6 +987,11 @@ export const useMetadataStore = defineStore('metadata', {
           const keys = response && typeof response === 'object' ? Object.keys(response) : [];
           throw new Error(`Invalid response: expected { data: T }, got keys: [${keys.join(', ')}]`);
         }
+        if (!isCurrentRequestContext()) {
+          perfSource = 'skipped';
+          endPerf({ stale: true });
+          return;
+        }
         processData(response.data);
         // Step 4: Store in IndexedDB for future visits
         if (typeof window !== 'undefined') {
@@ -970,11 +1004,12 @@ export const useMetadataStore = defineStore('metadata', {
         if (errorKey && isCurrentRequestContext()) {
           this.$patch({ [errorKey]: err as Error });
         }
-        if (onEmpty) {
+        const isCurrent = isCurrentRequestContext();
+        if (onEmpty && isCurrent) {
           onEmpty();
         }
         hadError = true;
-        if (throwOnError) {
+        if (throwOnError && isCurrent) {
           throw err;
         }
       } finally {
@@ -1156,29 +1191,36 @@ export const useMetadataStore = defineStore('metadata', {
      * Fetch minimal bootstrap data (player levels) to enable early UI rendering
      */
     async fetchBootstrapData(forceRefresh = false) {
-      const apiGameMode = this.getApiGameMode();
+      const requestLanguage = this.languageCode;
+      const requestGameMode = this.getApiGameMode();
+      const requestKey = `${requestLanguage}-${requestGameMode}`;
       await this.fetchWithCache<TarkovBootstrapQueryResult>({
         cacheType: 'bootstrap' as CacheType,
-        cacheKey: `${BOOTSTRAP_CACHE_VERSION}-${apiGameMode}`,
+        cacheKey: `${BOOTSTRAP_CACHE_VERSION}-${requestGameMode}`,
+        cacheLanguage: requestLanguage,
         endpoint: '/api/tarkov/bootstrap',
-        queryParams: { gameMode: apiGameMode, lang: this.languageCode },
+        queryParams: { gameMode: requestGameMode, lang: requestLanguage },
         cacheTTL: CACHE_CONFIG.DEFAULT_TTL,
         processData: (data) => this.processBootstrapData(data),
         logName: 'Bootstrap',
         forceRefresh,
         promiseKey: 'bootstrapPromise',
+        promiseRequestKey: requestKey,
       });
     },
     /**
      * Fetch core tasks, maps, and traders data (no objectives/rewards)
      */
     async fetchTasksCoreData(forceRefresh = false) {
-      const apiGameMode = this.getApiGameMode();
+      const requestLanguage = this.languageCode;
+      const requestGameMode = this.getApiGameMode();
+      const requestKey = `${requestLanguage}-${requestGameMode}`;
       await this.fetchWithCache<TarkovTasksCoreQueryResult>({
         cacheType: 'tasks-core' as CacheType,
-        cacheKey: `${TASKS_CORE_CACHE_VERSION}-${apiGameMode}`,
+        cacheKey: `${TASKS_CORE_CACHE_VERSION}-${requestGameMode}`,
+        cacheLanguage: requestLanguage,
         endpoint: '/api/tarkov/tasks-core',
-        queryParams: { lang: this.languageCode, gameMode: apiGameMode },
+        queryParams: { lang: requestLanguage, gameMode: requestGameMode },
         cacheTTL: CACHE_CONFIG.DEFAULT_TTL,
         loadingKey: 'loading',
         errorKey: 'error',
@@ -1187,17 +1229,21 @@ export const useMetadataStore = defineStore('metadata', {
         logName: 'Task core',
         forceRefresh,
         promiseKey: 'tasksCorePromise',
+        promiseRequestKey: requestKey,
         throwOnError: true,
       });
     },
     async fetchMapSpawnsData(forceRefresh = false) {
       if (this.mapSpawnsLoaded && !forceRefresh) return;
-      const apiGameMode = this.getApiGameMode();
+      const requestLanguage = this.languageCode;
+      const requestGameMode = this.getApiGameMode();
+      const requestKey = `${requestLanguage}-${requestGameMode}`;
       await this.fetchWithCache<TarkovMapSpawnsQueryResult>({
         cacheType: 'map-spawns' as CacheType,
-        cacheKey: `${MAP_SPAWNS_CACHE_VERSION}-${apiGameMode}`,
+        cacheKey: `${MAP_SPAWNS_CACHE_VERSION}-${requestGameMode}`,
+        cacheLanguage: requestLanguage,
         endpoint: '/api/tarkov/map-spawns',
-        queryParams: { lang: this.languageCode, gameMode: apiGameMode },
+        queryParams: { lang: requestLanguage, gameMode: requestGameMode },
         cacheTTL: CACHE_CONFIG.DEFAULT_TTL,
         loadingKey: 'mapSpawnsLoading',
         errorKey: 'mapSpawnsError',
@@ -1205,6 +1251,7 @@ export const useMetadataStore = defineStore('metadata', {
         logName: 'Map spawns',
         forceRefresh,
         promiseKey: 'mapSpawnsPromise',
+        promiseRequestKey: requestKey,
       });
     },
     /**
@@ -1217,14 +1264,17 @@ export const useMetadataStore = defineStore('metadata', {
         );
         return;
       }
-      const apiGameMode = this.getApiGameMode();
+      const requestLanguage = this.languageCode;
+      const requestGameMode = this.getApiGameMode();
+      const requestKey = `${requestLanguage}-${requestGameMode}`;
       await this.fetchWithCache<TarkovTaskObjectivesQueryResult>({
         cacheType: 'tasks-objectives' as CacheType,
-        cacheKey: `${TASK_OBJECTIVES_CACHE_VERSION}-${apiGameMode}`,
+        cacheKey: `${TASK_OBJECTIVES_CACHE_VERSION}-${requestGameMode}`,
+        cacheLanguage: requestLanguage,
         endpoint: '/api/tarkov/tasks-objectives',
         queryParams: {
-          gameMode: apiGameMode,
-          lang: this.languageCode,
+          gameMode: requestGameMode,
+          lang: requestLanguage,
           version: TASK_OBJECTIVES_CACHE_VERSION,
         },
         cacheTTL: CACHE_CONFIG.DEFAULT_TTL,
@@ -1244,6 +1294,7 @@ export const useMetadataStore = defineStore('metadata', {
         logName: 'Task objectives',
         forceRefresh,
         promiseKey: 'taskObjectivesPromise',
+        promiseRequestKey: requestKey,
       });
     },
     async fetchObjectiveModeCountDifferences(forceRefresh = false) {
@@ -1354,12 +1405,15 @@ export const useMetadataStore = defineStore('metadata', {
      * Fetch task rewards data
      */
     async fetchTaskRewardsData(forceRefresh = false) {
-      const apiGameMode = this.getApiGameMode();
+      const requestLanguage = this.languageCode;
+      const requestGameMode = this.getApiGameMode();
+      const requestKey = `${requestLanguage}-${requestGameMode}`;
       await this.fetchWithCache<TarkovTaskRewardsQueryResult>({
         cacheType: 'tasks-rewards' as CacheType,
-        cacheKey: `${TASK_REWARDS_CACHE_VERSION}-${apiGameMode}`,
+        cacheKey: `${TASK_REWARDS_CACHE_VERSION}-${requestGameMode}`,
+        cacheLanguage: requestLanguage,
         endpoint: '/api/tarkov/tasks-rewards',
-        queryParams: { lang: this.languageCode, gameMode: apiGameMode },
+        queryParams: { lang: requestLanguage, gameMode: requestGameMode },
         cacheTTL: CACHE_CONFIG.DEFAULT_TTL,
         processData: (data) => {
           this.mergeTaskRewards(data.tasks, { rebuildDerivedData: false });
@@ -1368,18 +1422,22 @@ export const useMetadataStore = defineStore('metadata', {
         logName: 'Task rewards',
         forceRefresh,
         promiseKey: 'taskRewardsPromise',
+        promiseRequestKey: requestKey,
       });
     },
     /**
      * Fetch hideout data
      */
     async fetchHideoutData(forceRefresh = false) {
-      const apiGameMode = this.getApiGameMode();
+      const requestLanguage = this.languageCode;
+      const requestGameMode = this.getApiGameMode();
+      const requestKey = `${requestLanguage}-${requestGameMode}`;
       await this.fetchWithCache<TarkovHideoutQueryResult>({
         cacheType: 'hideout' as CacheType,
-        cacheKey: `${HIDEOUT_CACHE_VERSION}-${apiGameMode}`,
+        cacheKey: `${HIDEOUT_CACHE_VERSION}-${requestGameMode}`,
+        cacheLanguage: requestLanguage,
         endpoint: '/api/tarkov/hideout',
-        queryParams: { lang: this.languageCode, gameMode: apiGameMode },
+        queryParams: { lang: requestLanguage, gameMode: requestGameMode },
         cacheTTL: CACHE_CONFIG.DEFAULT_TTL,
         loadingKey: 'hideoutLoading',
         errorKey: 'hideoutError',
@@ -1391,6 +1449,7 @@ export const useMetadataStore = defineStore('metadata', {
         logName: 'Hideout',
         forceRefresh,
         promiseKey: 'hideoutPromise',
+        promiseRequestKey: requestKey,
         throwOnError: true,
       });
     },
