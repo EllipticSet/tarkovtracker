@@ -61,10 +61,10 @@
     layout: 'default',
   });
   useSeoMeta({
-    title: t('page.storyline.title'),
-    description: t('page.storyline.subtitle'),
-    ogTitle: t('page.storyline.title'),
-    ogDescription: t('page.storyline.subtitle'),
+    title: () => t('page.storyline.title'),
+    description: () => t('page.storyline.subtitle'),
+    ogTitle: () => t('page.storyline.title'),
+    ogDescription: () => t('page.storyline.subtitle'),
   });
   const tarkovStore = useTarkovStore();
   const { chapters, normalizedChapters: storylineChapters } = useStorylineChapters();

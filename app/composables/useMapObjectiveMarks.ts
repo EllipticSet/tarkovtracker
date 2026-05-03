@@ -113,10 +113,10 @@ export function useMapObjectiveMarks({
         const isOnThisMap = objectiveMaps.some(
           (mapInfo) => mapInfo.objectiveID === obj.id && mapInfo.mapID === selectedMapId
         );
-        if (isOnThisMap && gpsInfo && (gpsInfo.x !== undefined || gpsInfo.y !== undefined)) {
+        if (isOnThisMap && gpsInfo && gpsInfo.x != null && gpsInfo.y != null) {
           possibleLocations.push({
             map: { id: selectedMapId },
-            positions: [{ x: gpsInfo.x ?? 0, y: 0, z: gpsInfo.y ?? 0 }],
+            positions: [{ x: gpsInfo.x, y: 0, z: gpsInfo.y }],
           });
         }
         if (zones.length > 0 || possibleLocations.length > 0) {
