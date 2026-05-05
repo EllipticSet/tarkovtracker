@@ -1,3 +1,10 @@
+## [1.35.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.35.0...v1.35.1) (2026-05-05)
+
+
+### Bug Fixes
+
+* **ui:** disable promoted Twitch embed popup ([9f2ea01](https://github.com/tarkovtracker-org/TarkovTracker/commit/9f2ea018aee8dca01b28c6e219b53ba3602590c2))
+
 # [1.35.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.34.5...v1.35.0) (2026-05-04)
 
 
