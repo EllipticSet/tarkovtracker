@@ -1,3 +1,10 @@
+## [1.37.1](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.37.0...v1.37.1) (2026-05-09)
+
+
+### Bug Fixes
+
+* **config:** move Twitch client ID to runtime config ([a061595](https://github.com/tarkovtracker-org/TarkovTracker/commit/a061595bb93b7906537b6ecbfd0ab99b807d0b4e))
+
 # [1.37.0](https://github.com/tarkovtracker-org/TarkovTracker/compare/v1.36.0...v1.37.0) (2026-05-09)
 
 
