@@ -154,7 +154,7 @@ export default defineNuxtConfig({
       // e.g., "/api/tarkov/*" for public data endpoints
       publicRoutes:
         process.env.API_PUBLIC_ROUTES?.trim() ||
-        '/api/tarkov/*,/api/tarkov-dev/profile,/api/changelog,/api/contributors,/api/logs/client,/api/profile/*,/api/streamer/*',
+        '/api/tarkov/*,/api/tarkov-dev/profile,/api/changelog,/api/contributors,/api/logs/client,/api/profile/*,/api/streamer/*,/api/twitch/*',
       // Whether to trust proxy headers (X-Forwarded-For, etc.)
       // ONLY enable this if the server is behind a trusted proxy like Cloudflare
       trustProxy: resolveTrustProxySetting({
@@ -178,10 +178,10 @@ export default defineNuxtConfig({
       githubOwner: process.env.GITHUB_OWNER || 'tarkovtracker-org',
       githubRepo: process.env.GITHUB_REPO || 'TarkovTracker',
       promotedTwitch: {
-        channel: process.env.NUXT_PUBLIC_PROMOTED_TWITCH_CHANNEL || 'glorious_e',
-        displayName: process.env.NUXT_PUBLIC_PROMOTED_TWITCH_DISPLAY_NAME || 'Glorious_E',
+        channel: process.env.NUXT_PUBLIC_PROMOTED_TWITCH_CHANNEL || 'honeyxxo',
+        displayName: process.env.NUXT_PUBLIC_PROMOTED_TWITCH_DISPLAY_NAME || 'honeyxxo',
         enabled: process.env.NUXT_PUBLIC_PROMOTED_TWITCH_ENABLED !== 'false',
-        endsAt: process.env.NUXT_PUBLIC_PROMOTED_TWITCH_ENDS_AT || '2026-05-04T13:30:00+00:00',
+        endsAt: process.env.NUXT_PUBLIC_PROMOTED_TWITCH_ENDS_AT || '2026-06-09T00:00:00+00:00',
       },
     },
   },

@@ -14,18 +14,6 @@
           {{ t('promoted_stream.title', { streamer: displayName }) }}
         </span>
         <UButton
-          :icon="isMuted ? 'i-mdi-volume-off' : 'i-mdi-volume-high'"
-          color="neutral"
-          variant="ghost"
-          size="xs"
-          :aria-label="
-            isMuted
-              ? t('promoted_stream.unmute', 'Unmute stream')
-              : t('promoted_stream.mute', 'Mute stream')
-          "
-          @click="toggleMute"
-        />
-        <UButton
           :icon="isExpanded ? 'i-mdi-arrow-collapse' : 'i-mdi-arrow-expand'"
           color="neutral"
           variant="ghost"
@@ -53,7 +41,7 @@
           variant="ghost"
           size="xs"
           :aria-label="t('promoted_stream.close', 'Close player')"
-          @click="isVisible = false"
+          @click="dismiss"
         />
       </div>
       <div class="bg-black">
@@ -63,7 +51,6 @@
           :title="t('promoted_stream.player_title', { streamer: displayName })"
           class="h-[360px] w-full min-w-[400px] border-0"
           allow="autoplay; encrypted-media; fullscreen"
-          allowfullscreen
           height="360"
           width="640"
         ></iframe>
@@ -77,26 +64,56 @@
   const config = runtimeConfig.public.promotedTwitch as {
     channel?: string;
     displayName?: string;
+    enabled?: boolean;
+    endsAt?: string;
   };
-  const channel = config.channel?.trim().toLowerCase() || 'glorious_e';
+  const channel = config.channel?.trim().toLowerCase() || 'honeyxxo';
   const displayName = config.displayName?.trim() || channel;
-  const isVisible = ref(true);
+  const isVisible = ref(false);
+  const dismissed = ref(false);
   const isExpanded = ref(true);
-  const isMuted = ref(true);
   const playerUrl = ref('');
+  let pollTimer: ReturnType<typeof setInterval> | null = null;
   const buildPlayerUrl = (): string => {
-    const url = new URL('https://player.twitch.tv/');
-    url.searchParams.set('autoplay', 'true');
-    url.searchParams.set('channel', channel);
-    url.searchParams.set('muted', String(isMuted.value));
-    url.searchParams.set('parent', window.location.hostname);
-    return url.toString();
+    const params = new URLSearchParams({
+      channel,
+      parent: window.location.hostname,
+      autoplay: 'true',
+      muted: 'true',
+    });
+    return `https://player.twitch.tv/?${params.toString()}`;
   };
-  const toggleMute = (): void => {
-    isMuted.value = !isMuted.value;
-    playerUrl.value = buildPlayerUrl();
+  const dismiss = (): void => {
+    dismissed.value = true;
+    isVisible.value = false;
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  };
+  const checkLive = async (): Promise<void> => {
+    if (dismissed.value) return;
+    try {
+      const { isLive } = await $fetch<{ isLive: boolean }>('/api/twitch/live', {
+        query: { channel },
+      });
+      if (isLive && !isVisible.value) {
+        playerUrl.value = buildPlayerUrl();
+        isVisible.value = true;
+      } else if (!isLive) {
+        isVisible.value = false;
+      }
+    } catch {
+      isVisible.value = false;
+    }
   };
   onMounted(() => {
-    playerUrl.value = buildPlayerUrl();
+    if (config.enabled === false) return;
+    if (config.endsAt && new Date(config.endsAt) < new Date()) return;
+    checkLive();
+    pollTimer = setInterval(checkLive, 60_000);
+  });
+  onUnmounted(() => {
+    if (pollTimer) clearInterval(pollTimer);
   });
 </script>

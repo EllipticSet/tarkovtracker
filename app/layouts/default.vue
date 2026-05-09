@@ -35,7 +35,7 @@
         width: `calc(100% - ${mainMarginLeft})`,
       }"
     />
-    <!-- <PromotedTwitchEmbed /> -->
+    <PromotedTwitchEmbed />
     <!-- Back to top button -->
     <BackToTop />
     <!-- Footer pinned to bottom when content is short -->
